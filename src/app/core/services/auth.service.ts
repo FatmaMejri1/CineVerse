@@ -13,10 +13,11 @@ import { auth } from '../firebase';
 })
 export class AuthService {
 
-  constructor() {}
+  async register(
+    email: string,
+    password: string
+  ): Promise<User> {
 
-  // Register a new user
-  async register(email: string, password: string): Promise<User> {
     const result = await createUserWithEmailAndPassword(
       auth,
       email,
@@ -26,8 +27,11 @@ export class AuthService {
     return result.user;
   }
 
-  // Login an existing user
-  async login(email: string, password: string): Promise<User> {
+  async login(
+    email: string,
+    password: string
+  ): Promise<User> {
+
     const result = await signInWithEmailAndPassword(
       auth,
       email,
@@ -37,13 +41,16 @@ export class AuthService {
     return result.user;
   }
 
-  // Logout
   async logout(): Promise<void> {
     await signOut(auth);
   }
 
-  // Get the currently authenticated user
   getCurrentUser(): User | null {
+    return auth.currentUser;
+  }
+
+  async waitForAuth(): Promise<User | null> {
+    await auth.authStateReady();
     return auth.currentUser;
   }
 }

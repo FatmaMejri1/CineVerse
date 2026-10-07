@@ -6,7 +6,7 @@ import { IonContent } from '@ionic/angular';
 import { TmdbService } from '../../core/services/tmdb.service';
 import { FavoritesService } from '../../core/services/favorites';
 import { environment } from '../../../environments/environment';
-
+import { AuthService } from '../../core/services/auth.service';
 @Component({
   selector: 'app-movie-details',
   templateUrl: './movie-details.page.html',
@@ -35,6 +35,7 @@ export class MovieDetailsPage implements OnInit {
     private route: ActivatedRoute,
     private tmdbService: TmdbService,
     private favoritesService: FavoritesService,
+    private authService: AuthService,
     private cdr: ChangeDetectorRef
   ) { }
 
@@ -83,25 +84,35 @@ export class MovieDetailsPage implements OnInit {
   }
 
   async checkFavorite(movieId: string): Promise<void> {
-
     try {
+      const user = await this.authService.waitForAuth();
+
+      if (!user) {
+        console.log('No authenticated user.');
+        this.isFavorite = false;
+        return;
+      }
 
       this.isFavorite =
         await this.favoritesService.isFavorite(movieId);
 
-    } catch (error) {
+      console.log(
+        'Favorite status:',
+        this.isFavorite
+      );
 
+    } catch (error) {
       console.error(
         'Error checking favorite:',
         error
       );
 
       this.isFavorite = false;
+
+    } finally {
+      this.cdr.detectChanges();
     }
-
-    this.cdr.detectChanges();
   }
-
   async toggleFavorite(): Promise<void> {
 
     if (!this.movie) {

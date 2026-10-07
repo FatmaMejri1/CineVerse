@@ -20,7 +20,7 @@ export class FavoritesService {
      * Add a movie to the current user's favorites
      */
     async addFavorite(movie: any): Promise<void> {
-
+        await auth.authStateReady();
         const user = auth.currentUser;
 
         if (!user) {
@@ -55,7 +55,7 @@ export class FavoritesService {
      * Remove a movie from the current user's favorites
      */
     async removeFavorite(movieId: number | string): Promise<void> {
-
+        await auth.authStateReady();
         const user = auth.currentUser;
 
         if (!user) {
@@ -82,11 +82,11 @@ export class FavoritesService {
      * Get all favorites of the current user
      */
     async getFavorites(): Promise<any[]> {
-
+        await auth.authStateReady();
         const user = auth.currentUser;
 
         if (!user) {
-            throw new Error('You must be logged in.');
+            throw new Error('You must be logged in to view favorites.');
         }
 
         const favoritesRef = collection(
@@ -109,6 +109,12 @@ export class FavoritesService {
      * Check if a movie is already a favorite
      */
     async isFavorite(movieId: number | string): Promise<boolean> {
+        await auth.authStateReady();
+        const user = auth.currentUser;
+
+        if (!user) {
+            return false;
+        }
 
         const favorites = await this.getFavorites();
 

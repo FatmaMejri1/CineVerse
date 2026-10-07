@@ -1,0 +1,96 @@
+<ion-content class="favorites-page">
+
+  <div class="favorites-container">
+
+    <div class="page-header">
+      <a routerLink="/home" class="back-button">
+        ←
+      </a>
+
+      <div>
+        <p class="eyebrow">YOUR COLLECTION</p>
+        <h1>My Favorites ❤️</h1>
+        <p class="subtitle">
+          Your personal movie playlist
+        </p>
+      </div>
+    </div>
+
+    <div class="loading-state" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>Loading your favorites...</p>
+    </div>
+
+    <div class="error-state" *ngIf="!isLoading && errorMessage">
+      <p>{{ errorMessage }}</p>
+
+      <button class="retry-button" (click)="loadFavorites()">
+        Try Again
+      </button>
+    </div>
+
+    <div class="empty-state" *ngIf="!isLoading && !errorMessage && favorites.length === 0">
+      <div class="empty-icon">
+        🎬
+      </div>
+
+      <h2>No favorites yet</h2>
+
+      <p>
+        Start exploring movies and add your
+        favorites to build your personal playlist.
+      </p>
+
+      <a routerLink="/movies" class="browse-button">
+        Browse Movies
+      </a>
+    </div>
+
+    <div class="favorites-grid" *ngIf="!isLoading && !errorMessage && favorites.length > 0">
+
+      <div class="favorite-card" *ngFor="let favorite of favorites">
+
+        <a [routerLink]="['/movie-details', favorite.movieId]" class="poster-link">
+          <img *ngIf="favorite.posterPath" [src]="imageBase + favorite.posterPath" [alt]="favorite.title" />
+
+          <div class="no-poster" *ngIf="!favorite.posterPath">
+            🎬
+          </div>
+        </a>
+
+        <div class="movie-info">
+
+          <h2>
+            {{ favorite.title }}
+          </h2>
+
+          <div class="movie-meta">
+
+            <span *ngIf="favorite.releaseDate">
+              {{ favorite.releaseDate | date:'yyyy' }}
+            </span>
+
+            <span *ngIf="favorite.voteAverage">
+              ⭐ {{ favorite.voteAverage | number:'1.1-1' }}
+            </span>
+
+          </div>
+
+          <button class="remove-button" [disabled]="removingId === favorite.movieKey"
+            (click)="removeFavorite(favorite)">
+            {{
+            removingId === favorite.movieKey
+            ? 'Removing...'
+            : '💔 Remove'
+            }}
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</ion-content>
