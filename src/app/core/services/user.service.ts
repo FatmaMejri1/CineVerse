@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
 import { db } from '../firebase';
 import { CineUser } from '../models/user.model';
@@ -11,7 +11,21 @@ export class UserService {
 
   async createUserProfile(user: CineUser): Promise<void> {
     const userRef = doc(db, 'users', user.uid);
-
     await setDoc(userRef, user);
+  }
+
+  async getUserProfile(uid: string): Promise<CineUser | null> {
+    const userRef = doc(db, 'users', uid);
+    const snap = await getDoc(userRef);
+
+    if (snap.exists()) {
+      return snap.data() as CineUser;
+    }
+    return null;
+  }
+
+  async updateUserProfile(uid: string, data: Partial<CineUser>): Promise<void> {
+    const userRef = doc(db, 'users', uid);
+    await setDoc(userRef, data, { merge: true });
   }
 }

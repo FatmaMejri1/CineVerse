@@ -43,13 +43,37 @@
 }
 
 .profile-button {
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
     border-radius: 50%;
-    border: 1px solid #302d46;
-    background: #151522;
-    color: white;
-    font-size: 18px;
+    border: 1px solid rgba(168, 85, 247, 0.35);
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(236, 72, 153, 0.15));
+
+    color: #e2e8f0;
+    text-decoration: none;
+    cursor: pointer;
+
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.profile-button:hover {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.45), rgba(236, 72, 153, 0.3));
+    border-color: #c084fc;
+    color: #ffffff;
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4);
+}
+
+.profile-svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+    stroke: currentColor;
 }
 
 /* WELCOME */
@@ -140,7 +164,7 @@
 
 .feature-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 16px;
 }
 
@@ -152,6 +176,8 @@
     border-radius: 20px;
     background: rgba(18, 18, 30, 0.85);
     cursor: pointer;
+    text-decoration: none;
+    color: inherit;
     transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
@@ -169,6 +195,10 @@
     border-radius: 14px;
     background: #211a38;
     font-size: 23px;
+}
+
+.profile-icon {
+    background: #2b173f;
 }
 
 .feature-card h3 {

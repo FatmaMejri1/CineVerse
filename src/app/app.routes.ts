@@ -10,13 +10,17 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () =>
-      import('./pages/login/login.page').then((m) => m.LoginPage),
+      import('./pages/login/login.page').then(
+        (m) => m.LoginPage
+      ),
   },
 
   {
     path: 'register',
     loadComponent: () =>
-      import('./pages/register/register.page').then((m) => m.RegisterPage),
+      import('./pages/register/register.page').then(
+        (m) => m.RegisterPage
+      ),
   },
 
   {
@@ -28,13 +32,17 @@ export const routes: Routes = [
   {
     path: 'home',
     loadComponent: () =>
-      import('./pages/home/home.page').then((m) => m.HomePage),
+      import('./pages/home/home.page').then(
+        (m) => m.HomePage
+      ),
   },
 
   {
     path: 'movies',
     loadComponent: () =>
-      import('./pages/movies/movies.page').then((m) => m.MoviesPage),
+      import('./pages/movies/movies.page').then(
+        (m) => m.MoviesPage
+      ),
   },
 
   {
@@ -50,6 +58,14 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/movie-details/movie-details.page').then(
         (m) => m.MovieDetailsPage
+      ),
+  },
+
+  {
+    path: 'profile',
+    loadComponent: () =>
+      import('./pages/profile/profile.page').then(
+        (m) => m.ProfilePage
       ),
   },
 

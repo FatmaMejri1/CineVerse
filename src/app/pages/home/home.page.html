@@ -13,9 +13,13 @@
         </span>
       </div>
 
-      <button class="profile-button" aria-label="Open profile">
-        👤
-      </button>
+      <!-- Profile -->
+      <a routerLink="/profile" class="profile-button" aria-label="Open profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="profile-svg">
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </a>
 
     </header>
 
@@ -50,16 +54,18 @@
     </div>
 
 
-    <!-- Temporary TMDB test -->
+    <!-- TMDB connection -->
     <div class="api-test">
 
       <div class="api-status">
+
         <span class="status-dot"></span>
 
         <div>
           <strong>Movie database</strong>
           <small>TMDB connection</small>
         </div>
+
       </div>
 
       <button class="test-button" (click)="testTmdb()">
@@ -74,17 +80,19 @@
     <section class="section">
 
       <div class="section-header">
+
         <div>
           <p class="section-label">EXPLORE</p>
           <h2>CineVerse</h2>
         </div>
+
       </div>
 
 
       <div class="feature-grid">
 
         <!-- Movies -->
-        <div class="feature-card movies-card" routerLink="/movies">
+        <a class="feature-card movies-card" routerLink="/movies">
 
           <div class="card-top">
 
@@ -107,11 +115,11 @@
 
           </div>
 
-        </div>
+        </a>
 
 
         <!-- Favorites -->
-        <div class="feature-card favorites-card" routerLink="/favorites">
+        <a class="feature-card favorites-card" routerLink="/favorites">
 
           <div class="card-top">
 
@@ -134,7 +142,34 @@
 
           </div>
 
-        </div>
+        </a>
+
+
+        <!-- Profile -->
+        <a class="feature-card profile-card" routerLink="/profile">
+
+          <div class="card-top">
+
+            <div class="feature-icon profile-icon">
+              👤
+            </div>
+
+            <span class="card-arrow">↗</span>
+
+          </div>
+
+          <div class="card-content">
+
+            <h3>My Profile</h3>
+
+            <p>
+              View your personal information and
+              manage your CineVerse profile.
+            </p>
+
+          </div>
+
+        </a>
 
       </div>
 
@@ -142,7 +177,7 @@
 
 
     <!-- Matching -->
-    <section class="matching-card" routerLink="/matching">
+    <a class="matching-card" routerLink="/matching">
 
       <div class="matching-icon">
         👥
@@ -169,7 +204,7 @@
         →
       </div>
 
-    </section>
+    </a>
 
 
     <!-- Footer -->
