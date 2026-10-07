@@ -1,0 +1,123 @@
+<ion-content [fullscreen]="true" class="movies-page">
+
+  <div class="movies-container">
+
+    <!-- HEADER -->
+    <header class="top-header">
+
+      <div class="logo">
+        <div class="logo-icon">🎬</div>
+        <span>Cine<span>Verse</span></span>
+      </div>
+
+      <button class="back-button" routerLink="/home">
+        ←
+      </button>
+
+    </header>
+
+
+    <!-- HERO -->
+    <section class="hero-section">
+
+      <p class="eyebrow">CINEVERSE MOVIES</p>
+
+      <h1>
+        Discover
+        <span>great movies.</span>
+      </h1>
+
+      <p class="description">
+        Explore popular movies and discover your next favorite.
+      </p>
+
+    </section>
+
+
+    <!-- SEARCH -->
+    <div class="search-box">
+
+      <span>🔍</span>
+
+      <input type="text" placeholder="Search movies..." [(ngModel)]="searchTerm" (input)="searchMovies()" />
+
+    </div>
+
+
+    <!-- MOVIES -->
+    <section class="movies-section">
+
+      <div class="section-header">
+
+        <h2>Popular Movies</h2>
+
+        <span>TMDB</span>
+
+      </div>
+
+
+      <!-- LOADING -->
+      <div class="loading-container" *ngIf="isLoading">
+
+        <div class="spinner"></div>
+
+        <p>Loading movies...</p>
+
+      </div>
+
+
+      <!-- ERROR -->
+      <div class="error-message" *ngIf="!isLoading && errorMessage">
+
+        <p>{{ errorMessage }}</p>
+
+        <button (click)="loadMovies()">
+          Try Again
+        </button>
+
+      </div>
+
+
+      <!-- MOVIE GRID -->
+      <div class="movie-grid" *ngIf="!isLoading && movies.length > 0">
+
+        <div class="movie-card" *ngFor="let movie of movies" [routerLink]="['/movie-details', movie.id]">
+
+          <!-- POSTER -->
+          <div class="poster-container">
+
+            <img [src]="imageBase + movie.poster_path" [alt]="movie.title" />
+
+            <!-- RATING -->
+            <div class="rating">
+
+              ⭐
+              {{ movie.vote_average | number:'1.1-1' }}
+
+            </div>
+
+          </div>
+
+
+          <!-- MOVIE INFO -->
+          <div class="movie-info">
+
+            <h3>
+              {{ movie.title }}
+            </h3>
+
+            <p>
+              {{ movie.release_date | date:'yyyy' }}
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </div>
+
+</ion-content>

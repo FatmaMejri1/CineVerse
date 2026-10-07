@@ -1,0 +1,195 @@
+<ion-content [fullscreen]="true" class="auth-content">
+  <div class="auth-wrapper">
+    <!-- Ambient glowing light spots -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+    <div class="ambient-glow glow-3"></div>
+
+    <div class="auth-container">
+      <!-- Brand Header -->
+      <header class="brand-header">
+        <div class="brand-badge-wrapper">
+          <div class="brand-badge-glow"></div>
+          <div class="brand-badge">
+            <svg class="brand-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+              <line x1="7" y1="2" x2="7" y2="22"></line>
+              <line x1="17" y1="2" x2="17" y2="22"></line>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <line x1="2" y1="7" x2="7" y2="7"></line>
+              <line x1="2" y1="17" x2="7" y2="17"></line>
+              <line x1="17" y1="17" x2="22" y2="17"></line>
+              <line x1="17" y1="7" x2="22" y2="7"></line>
+            </svg>
+          </div>
+        </div>
+
+        <div class="pill-tag">
+          <span class="pill-dot"></span>
+          <span>CINEVERSE CINEMA</span>
+        </div>
+
+        <h1 class="brand-title">Cine<span class="gradient-text">Verse</span></h1>
+        <p class="brand-subtitle">Stream unlimited films, track favorites & curate your watchlist.</p>
+      </header>
+
+      <!-- Glass Auth Card -->
+      <main class="auth-card">
+        <div class="card-header">
+          <h2>Welcome Back</h2>
+          <p>Sign in with your email to continue watching</p>
+        </div>
+
+        <!-- Feedback Alert Messages -->
+        <div *ngIf="errorMessage" class="feedback-banner error-banner" role="alert">
+          <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <div *ngIf="successMessage" class="feedback-banner success-banner" role="status">
+          <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <span>{{ successMessage }}</span>
+        </div>
+
+        <!-- Form Fields -->
+        <form (ngSubmit)="login()" novalidate class="auth-form">
+          <!-- Email Input -->
+          <div class="form-group">
+            <label for="login-email" class="form-label">
+              <span>Email Address</span>
+            </label>
+            <div class="input-wrapper">
+              <span class="input-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+              </span>
+              <input
+                id="login-email"
+                type="email"
+                name="email"
+                placeholder="you@example.com"
+                [(ngModel)]="email"
+                autocomplete="email"
+                class="custom-input"
+                required
+              />
+            </div>
+          </div>
+
+          <!-- Password Input -->
+          <div class="form-group">
+            <div class="label-row">
+              <label for="login-password" class="form-label">Password</label>
+              <button type="button" class="forgot-link" (click)="onForgotPassword()">
+                Forgot password?
+              </button>
+            </div>
+            <div class="input-wrapper">
+              <span class="input-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </span>
+              <input
+                id="login-password"
+                [type]="showPassword ? 'text' : 'password'"
+                name="password"
+                placeholder="••••••••••••"
+                [(ngModel)]="password"
+                autocomplete="current-password"
+                class="custom-input"
+                required
+              />
+              <button
+                type="button"
+                class="password-toggle-btn"
+                (click)="togglePasswordVisibility()"
+                [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+              >
+                <!-- Eye Open -->
+                <svg *ngIf="!showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <!-- Eye Off -->
+                <svg *ngIf="showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Remember Me Checkbox -->
+          <div class="checkbox-row">
+            <label class="custom-checkbox-label">
+              <input type="checkbox" [(ngModel)]="rememberMe" name="rememberMe" class="custom-checkbox" />
+              <span class="checkbox-box"></span>
+              <span class="checkbox-text">Keep me signed in</span>
+            </label>
+          </div>
+
+          <!-- Submit CTA Button -->
+          <button
+            type="submit"
+            class="submit-btn"
+            [disabled]="isLoading"
+            [class.is-loading]="isLoading"
+          >
+            <span *ngIf="!isLoading" class="btn-content">
+              <span>Sign In</span>
+              <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </span>
+            <div *ngIf="isLoading" class="btn-spinner-wrap">
+              <ion-spinner name="crescent" color="light"></ion-spinner>
+              <span>Authenticating...</span>
+            </div>
+          </button>
+        </form>
+
+
+        <!-- Footer / Link to Register -->
+        <div class="card-footer">
+          <p>
+            Don't have an account?
+            <a routerLink="/register" class="accent-link">
+              Create an account
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="link-arrow">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </a>
+          </p>
+        </div>
+      </main>
+
+      <!-- Trust Badges -->
+      <footer class="cinema-badges">
+        <span class="badge-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="8" y1="20" x2="16" y2="20"/><line x1="12" y1="20" x2="12" y2="16"/></svg>
+          4K Ultra HD
+        </span>
+        <span class="badge-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Secure Auth
+        </span>
+        <span class="badge-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+          Anytime Stream
+        </span>
+      </footer>
+    </div>
+  </div>
+</ion-content>

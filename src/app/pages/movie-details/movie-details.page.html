@@ -1,0 +1,111 @@
+<ion-content [fullscreen]="true" class="details-page">
+
+  <div class="details-container">
+
+    <!-- HEADER -->
+    <header class="top-header">
+
+      <div class="logo">
+        <div class="logo-icon">🎬</div>
+
+        <span>
+          Cine<span>Verse</span>
+        </span>
+      </div>
+
+      <button class="back-button" routerLink="/movies">
+        ←
+      </button>
+
+    </header>
+
+
+    <!-- LOADING -->
+    <div class="loading-container" *ngIf="isLoading">
+
+      <div class="spinner"></div>
+
+      <p>Loading movie...</p>
+
+    </div>
+
+
+    <!-- ERROR -->
+    <div class="error-message" *ngIf="!isLoading && errorMessage">
+
+      <p>{{ errorMessage }}</p>
+
+      <button routerLink="/movies">
+        Back to Movies
+      </button>
+
+    </div>
+
+
+    <!-- MOVIE DETAILS -->
+    <section class="movie-details" *ngIf="!isLoading && movie">
+
+      <!-- POSTER -->
+      <div class="poster-container">
+
+        <img [src]="imageBase + movie.poster_path" [alt]="movie.title" />
+
+      </div>
+
+
+      <!-- INFORMATION -->
+      <div class="movie-info">
+
+        <p class="eyebrow">
+          MOVIE DETAILS
+        </p>
+
+        <h1>
+          {{ movie.title }}
+        </h1>
+
+
+        <div class="meta">
+
+          <span>
+            📅 {{ movie.release_date | date:'yyyy' }}
+          </span>
+
+          <span>
+            ⭐ {{ movie.vote_average | number:'1.1-1' }}
+          </span>
+
+          <span>
+            🎬 {{ movie.runtime }} min
+          </span>
+
+        </div>
+
+
+        <p class="overview">
+          {{ movie.overview }}
+        </p>
+
+
+        <button class="favorite-button" [class.remove-favorite]="isFavorite" [disabled]="isFavoriteLoading"
+          (click)="toggleFavorite()">
+          <span *ngIf="!isFavoriteLoading">
+            {{ isFavorite ? '💔 Remove from Favorites' : '❤️ Add to Favorites' }}
+          </span>
+
+          <span *ngIf="isFavoriteLoading">
+            Updating...
+          </span>
+        </button>
+
+        <p class="favorite-message" *ngIf="favoriteMessage">
+          {{ favoriteMessage }}
+        </p>
+
+      </div>
+
+    </section>
+
+  </div>
+
+</ion-content>

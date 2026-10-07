@@ -34,4 +34,29 @@
 
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import '@ionic/angular/css/palettes/dark.system.css';
+@import '@ionic/angular/css/palettes/dark.always.css';
+
+:root {
+  --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --ion-font-family: 'Plus Jakarta Sans', sans-serif;
+
+  --cine-bg: #07080f;
+  --cine-surface: #101221;
+  --cine-surface-card: rgba(17, 20, 36, 0.82);
+  --cine-border: rgba(255, 255, 255, 0.09);
+  --cine-primary: #8b5cf6;
+  --cine-primary-gradient: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #ec4899 100%);
+  --cine-glow: rgba(124, 58, 237, 0.35);
+}
+
+body, html {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: var(--cine-bg);
+  color: #f8fafc;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, .brand-title {
+  font-family: 'Outfit', sans-serif;
+}

@@ -1,0 +1,188 @@
+<ion-content [fullscreen]="true" class="home-page">
+
+  <div class="home-container">
+
+    <!-- Header -->
+    <header class="top-header">
+
+      <div class="logo">
+        <div class="logo-icon">🎬</div>
+
+        <span>
+          Cine<span>Verse</span>
+        </span>
+      </div>
+
+      <button class="profile-button" aria-label="Open profile">
+        👤
+      </button>
+
+    </header>
+
+
+    <!-- Welcome -->
+    <section class="welcome-section">
+
+      <p class="eyebrow">WELCOME BACK</p>
+
+      <h1>
+        Discover your next
+        <span>favorite movie.</span>
+      </h1>
+
+      <p class="description">
+        Explore movies, build your favorites,
+        and find people who share your taste.
+      </p>
+
+    </section>
+
+
+    <!-- Search -->
+    <div class="search-box">
+
+      <span class="search-icon">⌕</span>
+
+      <input type="text" placeholder="Search movies..." aria-label="Search movies" />
+
+      <span class="search-hint">⌘ K</span>
+
+    </div>
+
+
+    <!-- Temporary TMDB test -->
+    <div class="api-test">
+
+      <div class="api-status">
+        <span class="status-dot"></span>
+
+        <div>
+          <strong>Movie database</strong>
+          <small>TMDB connection</small>
+        </div>
+      </div>
+
+      <button class="test-button" (click)="testTmdb()">
+        Test connection
+        <span>→</span>
+      </button>
+
+    </div>
+
+
+    <!-- Main actions -->
+    <section class="section">
+
+      <div class="section-header">
+        <div>
+          <p class="section-label">EXPLORE</p>
+          <h2>CineVerse</h2>
+        </div>
+      </div>
+
+
+      <div class="feature-grid">
+
+        <!-- Movies -->
+        <div class="feature-card movies-card" routerLink="/movies">
+
+          <div class="card-top">
+
+            <div class="feature-icon movies-icon">
+              🎬
+            </div>
+
+            <span class="card-arrow">↗</span>
+
+          </div>
+
+          <div class="card-content">
+
+            <h3>Browse Movies</h3>
+
+            <p>
+              Discover popular movies, explore new releases
+              and find something worth watching.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <!-- Favorites -->
+        <div class="feature-card favorites-card" routerLink="/favorites">
+
+          <div class="card-top">
+
+            <div class="feature-icon favorites-icon">
+              ❤️
+            </div>
+
+            <span class="card-arrow">↗</span>
+
+          </div>
+
+          <div class="card-content">
+
+            <h3>My Favorites</h3>
+
+            <p>
+              Keep your favorite movies in one place
+              and build your personal collection.
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- Matching -->
+    <section class="matching-card" routerLink="/matching">
+
+      <div class="matching-icon">
+        👥
+      </div>
+
+      <div class="matching-content">
+
+        <p class="small-title">
+          FIND YOUR MOVIE TWIN
+        </p>
+
+        <h2>
+          Discover people who share your taste.
+        </h2>
+
+        <p>
+          Compare your favorite movies and discover
+          users with more than 75% similarity.
+        </p>
+
+      </div>
+
+      <div class="matching-arrow">
+        →
+      </div>
+
+    </section>
+
+
+    <!-- Footer -->
+    <footer class="home-footer">
+
+      <span>© 2026 CineVerse</span>
+
+      <span class="footer-dot">•</span>
+
+      <span>Powered by TMDB</span>
+
+    </footer>
+
+  </div>
+
+</ion-content>
