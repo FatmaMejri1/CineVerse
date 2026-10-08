@@ -55,6 +55,12 @@ export class MatchingPage implements OnInit {
     await this.loadMatches();
   }
 
+  async ionViewWillEnter(): Promise<void> {
+    const user = await this.authService.waitForAuth();
+    this.currentUserId = user?.uid || null;
+    await this.loadMatches();
+  }
+
   /**
    * Load matching users and their comment boards
    */

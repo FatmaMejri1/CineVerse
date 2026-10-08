@@ -128,19 +128,14 @@ export class MatchingService {
         continue;
       }
 
-      // 6. Calculate mutual compatibility percentages
-      // Professor rule: (common / total) * 100 > 75
+      // 6. Calculate compatibility percentages
       const myRate = (commonMovies.length / myFavorites.length) * 100;
       const otherRate = (commonMovies.length / otherFavoriteIds.length) * 100;
 
-      // Prefer mutual compatibility: both users share > 75% of their favorites
-      // Or if one user's list is a subset with >75% compatibility
-      const isMutualMatch = myRate > 75 && otherRate > 75;
+      // Taste compatibility must be at or above 75%
+      const displayRate = Math.round(Math.max(myRate, (myRate + otherRate) / 2));
 
-      // If mutual match passes, calculate the composite match rate
-      if (isMutualMatch) {
-        const compositeRate = Math.round((myRate + otherRate) / 2);
-
+      if (myRate >= 75 || otherRate >= 75 || displayRate >= 75) {
         // Sanitize names to prevent "Unknown User"
         let firstName = String(profile['firstName'] || '').trim();
         let lastName = String(profile['lastName'] || '').trim();
@@ -157,7 +152,7 @@ export class MatchingService {
           firstName,
           lastName,
           photoUrl: String(profile['photoUrl'] || ''),
-          matchRate: compositeRate,
+          matchRate: displayRate,
           myRate: Math.round(myRate),
           otherRate: Math.round(otherRate),
           commonMovies

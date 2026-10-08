@@ -23,14 +23,13 @@
 
       <div class="hero-content">
         <div class="hero-pill">
-          <i class="bi bi-stars"></i>
-          <span>Mutual Compatibility > 75%</span>
+          <i class="bi bi-people-fill"></i>
+          <span>Cinema Soulmates</span>
         </div>
 
         <h2>Find Your Movie People</h2>
         <p>
-          We compare your personal favorites against other CineVerse members.
-          When you both share over 75% of favorite movies, your connection unlocks here.
+          Connect with members who love the same cinema gems as you. Discover shared favorites, exchange reviews, and chat with fellow film lovers.
         </p>
       </div>
 
@@ -93,29 +92,24 @@
 
 
     <!-- ============================================== -->
-    <!-- STATE 3B: EMPTY - HAS FAVORITES BUT NO >75% MATCHES -->
+    <!-- STATE 3B: EMPTY - HAS FAVORITES BUT NO MATCHES YET -->
     <!-- ============================================== -->
     <div class="state-card empty-state" *ngIf="!isLoading && !errorMessage && myFavoritesCount > 0 && matches.length === 0">
 
       <div class="state-icon-wrap">
-        <i class="bi bi-people"></i>
+        <i class="bi bi-camera-reels-fill"></i>
       </div>
 
-      <h2>No perfect matches yet</h2>
+      <h2>Looking for Movie Twins</h2>
       <p>
-        You currently have {{ myFavoritesCount }} favorite {{ myFavoritesCount === 1 ? 'movie' : 'movies' }}.
-        Keep exploring and adding films to your playlist — your community expands as your taste grows.
+        You have saved {{ myFavoritesCount }} favorite {{ myFavoritesCount === 1 ? 'movie' : 'movies' }}.
+        We're continually comparing cinema taste across CineVerse. Keep adding films to expand your community circle!
       </p>
 
       <div class="empty-actions">
         <a routerLink="/movies" class="action-btn primary-btn">
-          <i class="bi bi-compass"></i>
+          <i class="bi bi-play-circle-fill"></i>
           <span>Explore More Movies</span>
-        </a>
-
-        <a routerLink="/favorites" class="action-btn secondary-btn">
-          <i class="bi bi-heart"></i>
-          <span>My Favorites</span>
         </a>
       </div>
 
@@ -132,13 +126,13 @@
           <h2>Your Match Community</h2>
           <p class="section-count">
             <i class="bi bi-check-circle-fill"></i>
-            <span>{{ matches.length }} {{ matches.length === 1 ? 'member' : 'members' }} with > 75% compatibility</span>
+            <span>{{ matches.length }} {{ matches.length === 1 ? 'movie soulmate' : 'movie soulmates' }} connected</span>
           </p>
         </div>
 
         <span class="threshold-badge">
-          <i class="bi bi-shield-check"></i>
-          <span>Verified Mutual Taste</span>
+          <i class="bi bi-stars"></i>
+          <span>High Taste Match</span>
         </span>
       </div>
 
@@ -349,24 +343,48 @@
     </section>
 
 
-    <!-- BOTTOM NAVIGATION -->
-    <nav class="bottom-nav">
-      <a routerLink="/favorites" class="nav-pill">
-        <i class="bi bi-heart-fill"></i>
-        <span>My Favorites</span>
-      </a>
-
-      <a routerLink="/movies" class="nav-pill">
-        <i class="bi bi-film"></i>
-        <span>Explore Movies</span>
-      </a>
-
-      <a routerLink="/home" class="nav-pill">
-        <i class="bi bi-house-fill"></i>
-        <span>Home</span>
-      </a>
-    </nav>
+    <!-- Bottom spacer for mobile nav bar -->
+    <div class="bottom-spacer"></div>
 
   </div>
+
+
+  <!-- ════════ SLEEK BOTTOM NAVIGATION BAR ════════ -->
+  <nav class="mobile-bottom-nav">
+    <a routerLink="/home" class="nav-tab" aria-label="Home">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-house-door-fill"></i>
+      </div>
+      <span>Home</span>
+    </a>
+
+    <a routerLink="/movies" class="nav-tab" aria-label="Movies">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-play-circle-fill"></i>
+      </div>
+      <span>Movies</span>
+    </a>
+
+    <a routerLink="/favorites" class="nav-tab" aria-label="Favorites">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-heart-fill"></i>
+      </div>
+      <span>Favorites</span>
+    </a>
+
+    <a routerLink="/matching" class="nav-tab active" aria-label="Community">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <span>Community</span>
+    </a>
+
+    <a routerLink="/profile" class="nav-tab" aria-label="Profile">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-person-fill"></i>
+      </div>
+      <span>Profile</span>
+    </a>
+  </nav>
 
 </ion-content>
