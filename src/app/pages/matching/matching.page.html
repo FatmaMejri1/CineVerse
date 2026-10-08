@@ -1,0 +1,372 @@
+<ion-content [fullscreen]="true" class="community-content">
+
+  <div class="community-container">
+
+    <!-- PAGE HEADER -->
+    <header class="page-header">
+
+      <a routerLink="/home" class="back-btn" aria-label="Back to Home">
+        <i class="bi bi-arrow-left"></i>
+      </a>
+
+      <div class="header-titles">
+        <span class="eyebrow">CINEVERSE SOCIAL</span>
+        <h1>Movie Community</h1>
+        <p class="subtitle">Connect with members who share your exact cinema taste</p>
+      </div>
+
+    </header>
+
+
+    <!-- HERO BANNER -->
+    <section class="hero-banner" *ngIf="!isLoading && !errorMessage">
+
+      <div class="hero-content">
+        <div class="hero-pill">
+          <i class="bi bi-stars"></i>
+          <span>Mutual Compatibility > 75%</span>
+        </div>
+
+        <h2>Find Your Movie People</h2>
+        <p>
+          We compare your personal favorites against other CineVerse members.
+          When you both share over 75% of favorite movies, your connection unlocks here.
+        </p>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================== -->
+    <!-- STATE 1: CINEMATIC LOADING -->
+    <!-- ============================================== -->
+    <div class="state-card loading-state" *ngIf="isLoading">
+
+      <div class="spinner-glow"></div>
+
+      <h2>Discovering your movie community...</h2>
+      <p>Comparing your favorite films with active CineVerse members</p>
+
+    </div>
+
+
+    <!-- ============================================== -->
+    <!-- STATE 2: ERROR -->
+    <!-- ============================================== -->
+    <div class="state-card error-state" *ngIf="!isLoading && errorMessage">
+
+      <div class="state-icon-wrap error-icon">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+      </div>
+
+      <h2>Something went wrong</h2>
+      <p>{{ errorMessage }}</p>
+
+      <button class="action-btn primary-btn" (click)="loadMatches()">
+        <i class="bi bi-arrow-clockwise"></i>
+        <span>Try Again</span>
+      </button>
+
+    </div>
+
+
+    <!-- ============================================== -->
+    <!-- STATE 3A: EMPTY - USER HAS 0 FAVORITES -->
+    <!-- ============================================== -->
+    <div class="state-card empty-state" *ngIf="!isLoading && !errorMessage && myFavoritesCount === 0">
+
+      <div class="state-icon-wrap">
+        <i class="bi bi-film"></i>
+      </div>
+
+      <h2>Build your movie taste</h2>
+      <p>
+        Add some favorite movies and we'll automatically discover people who share your passion.
+      </p>
+
+      <a routerLink="/movies" class="action-btn primary-btn">
+        <i class="bi bi-compass"></i>
+        <span>Browse Movies</span>
+      </a>
+
+    </div>
+
+
+    <!-- ============================================== -->
+    <!-- STATE 3B: EMPTY - HAS FAVORITES BUT NO >75% MATCHES -->
+    <!-- ============================================== -->
+    <div class="state-card empty-state" *ngIf="!isLoading && !errorMessage && myFavoritesCount > 0 && matches.length === 0">
+
+      <div class="state-icon-wrap">
+        <i class="bi bi-people"></i>
+      </div>
+
+      <h2>No perfect matches yet</h2>
+      <p>
+        You currently have {{ myFavoritesCount }} favorite {{ myFavoritesCount === 1 ? 'movie' : 'movies' }}.
+        Keep exploring and adding films to your playlist — your community expands as your taste grows.
+      </p>
+
+      <div class="empty-actions">
+        <a routerLink="/movies" class="action-btn primary-btn">
+          <i class="bi bi-compass"></i>
+          <span>Explore More Movies</span>
+        </a>
+
+        <a routerLink="/favorites" class="action-btn secondary-btn">
+          <i class="bi bi-heart"></i>
+          <span>My Favorites</span>
+        </a>
+      </div>
+
+    </div>
+
+
+    <!-- ============================================== -->
+    <!-- STATE 4: COMMUNITY MATCHES LIST -->
+    <!-- ============================================== -->
+    <section class="matches-section" *ngIf="!isLoading && !errorMessage && matches.length > 0">
+
+      <div class="section-top">
+        <div>
+          <h2>Your Match Community</h2>
+          <p class="section-count">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>{{ matches.length }} {{ matches.length === 1 ? 'member' : 'members' }} with > 75% compatibility</span>
+          </p>
+        </div>
+
+        <span class="threshold-badge">
+          <i class="bi bi-shield-check"></i>
+          <span>Verified Mutual Taste</span>
+        </span>
+      </div>
+
+
+      <!-- LIST OF MATCH CARDS -->
+      <div class="match-cards-list">
+
+        <article class="match-card" *ngFor="let match of matches">
+
+          <!-- CARD HEADER -->
+          <div class="card-header">
+
+            <div class="user-profile-meta">
+
+              <!-- Avatar -->
+              <div class="avatar-wrap">
+                <img
+                  *ngIf="match.photoUrl"
+                  [src]="match.photoUrl"
+                  [alt]="match.firstName + ' ' + match.lastName"
+                  class="avatar-img"
+                />
+                <div class="avatar-fallback" *ngIf="!match.photoUrl">
+                  {{ match.firstName.charAt(0).toUpperCase() }}
+                </div>
+                <span class="online-indicator" title="Active Member"></span>
+              </div>
+
+              <!-- Name & Badge -->
+              <div class="user-details">
+                <div class="name-row">
+                  <h3>{{ match.firstName }} {{ match.lastName }}</h3>
+                  <span class="badge-twin">
+                    <i class="bi bi-stars"></i>
+                    <span>Movie Match</span>
+                  </span>
+                </div>
+
+                <p class="common-stat">
+                  <i class="bi bi-film"></i>
+                  <span>{{ match.commonMovies.length }} {{ match.commonMovies.length === 1 ? 'movie' : 'movies' }} in common</span>
+                </p>
+              </div>
+
+            </div>
+
+            <!-- Match Rate Highlight -->
+            <div class="match-score-badge">
+              <span class="score-number">{{ match.matchRate }}%</span>
+              <span class="score-label">MATCH</span>
+            </div>
+
+          </div>
+
+
+          <!-- COMMON MOVIES COMPACT CAROUSEL -->
+          <div class="common-movies-block">
+
+            <div class="movies-block-header">
+              <span class="block-title">
+                <i class="bi bi-heart-fill"></i>
+                <span>Movies you both love</span>
+              </span>
+              <span class="block-count">{{ match.commonMovies.length }}</span>
+            </div>
+
+            <div class="movies-carousel">
+
+              <div
+                class="compact-movie-card"
+                *ngFor="let movie of match.commonMovies"
+                [routerLink]="['/movie-details', movie.movieId]"
+                title="View details for {{ movie.title }}"
+              >
+                <div class="movie-poster-box">
+                  <img
+                    *ngIf="movie.posterPath"
+                    [src]="'https://image.tmdb.org/t/p/w200' + movie.posterPath"
+                    [alt]="movie.title"
+                    loading="lazy"
+                  />
+                  <div class="no-poster-box" *ngIf="!movie.posterPath">
+                    <i class="bi bi-film"></i>
+                  </div>
+                  <span class="shared-badge" title="Common favorite">
+                    <i class="bi bi-check2"></i>
+                  </span>
+                </div>
+
+                <p class="compact-movie-title">{{ movie.title }}</p>
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- COMMUNITY DISCUSSION / COMMENTS -->
+          <div class="discussion-block">
+
+            <div class="discussion-header">
+              <span class="discussion-title">
+                <i class="bi bi-chat-dots-fill"></i>
+                <span>Community Discussion</span>
+              </span>
+              <span class="comment-count-badge">
+                {{ commentsMap[match.uid]?.length || 0 }}
+              </span>
+            </div>
+
+            <!-- Comments List -->
+            <div class="comments-stream">
+
+              <!-- Loading comments -->
+              <div class="comments-loading" *ngIf="loadingCommentsMap[match.uid]">
+                <div class="mini-spinner"></div>
+                <span>Loading discussion...</span>
+              </div>
+
+              <!-- Error comments -->
+              <div class="comments-error" *ngIf="commentErrorMap[match.uid]">
+                <i class="bi bi-exclamation-circle"></i>
+                <span>{{ commentErrorMap[match.uid] }}</span>
+              </div>
+
+              <!-- Empty comments note -->
+              <div
+                class="comments-empty"
+                *ngIf="!loadingCommentsMap[match.uid] && (!commentsMap[match.uid] || commentsMap[match.uid].length === 0)"
+              >
+                <p>Start the conversation! Share your favorite scenes or discuss recommendations.</p>
+              </div>
+
+              <!-- Comment Items -->
+              <div
+                class="comment-bubble"
+                *ngFor="let comment of commentsMap[match.uid]"
+                [class.my-comment]="comment.authorUid === currentUserId"
+              >
+                <div class="comment-head">
+                  <div class="comment-author-info">
+                    <div class="comment-avatar">
+                      <img
+                        *ngIf="comment.authorPhotoUrl"
+                        [src]="comment.authorPhotoUrl"
+                        [alt]="comment.authorName"
+                      />
+                      <span *ngIf="!comment.authorPhotoUrl">
+                        {{ comment.authorName.charAt(0).toUpperCase() }}
+                      </span>
+                    </div>
+
+                    <strong class="comment-author-name">
+                      {{ comment.authorUid === currentUserId ? 'You' : comment.authorName }}
+                    </strong>
+                  </div>
+
+                  <div class="comment-meta">
+                    <span class="comment-time">{{ formatCommentDate(comment.createdAt) }}</span>
+                    <button
+                      class="btn-delete-comment"
+                      *ngIf="comment.authorUid === currentUserId"
+                      (click)="deleteComment(match.uid, comment.id)"
+                      title="Delete comment"
+                      aria-label="Delete comment"
+                    >
+                      <i class="bi bi-trash3"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <p class="comment-text">{{ comment.text }}</p>
+              </div>
+
+            </div>
+
+
+            <!-- Comment Input Box -->
+            <div class="comment-input-row">
+              <input
+                type="text"
+                class="comment-field"
+                placeholder="Write a message to {{ match.firstName }}..."
+                [(ngModel)]="newCommentTexts[match.uid]"
+                (keyup.enter)="postComment(match.uid)"
+                [disabled]="submittingCommentMap[match.uid]"
+                maxlength="500"
+              />
+
+              <button
+                class="btn-send-comment"
+                (click)="postComment(match.uid)"
+                [disabled]="submittingCommentMap[match.uid] || !newCommentTexts[match.uid]?.trim()"
+                aria-label="Send comment"
+              >
+                <i class="bi bi-send-fill" *ngIf="!submittingCommentMap[match.uid]"></i>
+                <span class="mini-spinner" *ngIf="submittingCommentMap[match.uid]"></span>
+                <span class="send-label">Post</span>
+              </button>
+            </div>
+
+          </div>
+
+        </article>
+
+      </div>
+
+    </section>
+
+
+    <!-- BOTTOM NAVIGATION -->
+    <nav class="bottom-nav">
+      <a routerLink="/favorites" class="nav-pill">
+        <i class="bi bi-heart-fill"></i>
+        <span>My Favorites</span>
+      </a>
+
+      <a routerLink="/movies" class="nav-pill">
+        <i class="bi bi-film"></i>
+        <span>Explore Movies</span>
+      </a>
+
+      <a routerLink="/home" class="nav-pill">
+        <i class="bi bi-house-fill"></i>
+        <span>Home</span>
+      </a>
+    </nav>
+
+  </div>
+
+</ion-content>

@@ -442,7 +442,7 @@ export class ProfilePage implements OnInit {
       );
 
       this.passwordSuccessMessage =
-        'Password updated successfully! 🔒';
+        'Password updated successfully!';
 
       this.currentPassword = '';
       this.newPassword = '';

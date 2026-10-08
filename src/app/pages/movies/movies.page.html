@@ -6,12 +6,12 @@
     <header class="top-header">
 
       <div class="logo">
-        <div class="logo-icon">🎬</div>
+        <div class="logo-icon"><i class="bi bi-film"></i></div>
         <span>Cine<span>Verse</span></span>
       </div>
 
       <button class="back-button" routerLink="/home">
-        ←
+        <i class="bi bi-arrow-left"></i>
       </button>
 
     </header>
@@ -37,7 +37,7 @@
     <!-- SEARCH -->
     <div class="search-box">
 
-      <span>🔍</span>
+      <i class="bi bi-search"></i>
 
       <input type="text" placeholder="Search movies..." [(ngModel)]="searchTerm" (input)="searchMovies()" />
 
@@ -90,10 +90,8 @@
 
             <!-- RATING -->
             <div class="rating">
-
-              ⭐
+              <i class="bi bi-star-fill"></i>
               {{ movie.vote_average | number:'1.1-1' }}
-
             </div>
 
           </div>

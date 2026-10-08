@@ -4,12 +4,12 @@
 
     <div class="page-header">
       <a routerLink="/home" class="back-button">
-        ←
+        <i class="bi bi-arrow-left"></i>
       </a>
 
       <div>
         <p class="eyebrow">YOUR COLLECTION</p>
-        <h1>My Favorites ❤️</h1>
+        <h1>My Favorites <i class="bi bi-heart-fill title-heart"></i></h1>
         <p class="subtitle">
           Your personal movie playlist
         </p>
@@ -31,7 +31,7 @@
 
     <div class="empty-state" *ngIf="!isLoading && !errorMessage && favorites.length === 0">
       <div class="empty-icon">
-        🎬
+        <i class="bi bi-film"></i>
       </div>
 
       <h2>No favorites yet</h2>
@@ -54,7 +54,7 @@
           <img *ngIf="favorite.posterPath" [src]="imageBase + favorite.posterPath" [alt]="favorite.title" />
 
           <div class="no-poster" *ngIf="!favorite.posterPath">
-            🎬
+            <i class="bi bi-film"></i>
           </div>
         </a>
 
@@ -67,21 +67,24 @@
           <div class="movie-meta">
 
             <span *ngIf="favorite.releaseDate">
+              <i class="bi bi-calendar3"></i>
               {{ favorite.releaseDate | date:'yyyy' }}
             </span>
 
             <span *ngIf="favorite.voteAverage">
-              ⭐ {{ favorite.voteAverage | number:'1.1-1' }}
+              <i class="bi bi-star-fill"></i>
+              {{ favorite.voteAverage | number:'1.1-1' }}
             </span>
 
           </div>
 
           <button class="remove-button" [disabled]="removingId === favorite.movieKey"
             (click)="removeFavorite(favorite)">
+            <i class="bi" [ngClass]="removingId === favorite.movieKey ? 'bi-hourglass-split' : 'bi-heart-break'"></i>
             {{
             removingId === favorite.movieKey
             ? 'Removing...'
-            : '💔 Remove'
+            : 'Remove'
             }}
           </button>
 

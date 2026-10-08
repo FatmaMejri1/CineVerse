@@ -86,8 +86,23 @@ h1 {
 }
 
 .empty-icon {
-    font-size: 60px;
-    margin-bottom: 15px;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 22px;
+    background: rgba(217, 70, 239, 0.12);
+    font-size: 38px;
+    color: #d946ef;
+}
+
+.title-heart {
+    font-size: 26px;
+    color: #d946ef;
+    vertical-align: middle;
+    margin-left: 6px;
 }
 
 .empty-state h2 {
@@ -168,8 +183,9 @@ h1 {
     align-items: center;
     justify-content: center;
 
-    color: white;
-    font-size: 40px;
+    color: #d946ef;
+    font-size: 36px;
+    background: rgba(217, 70, 239, 0.08);
 }
 
 .movie-info {
@@ -194,10 +210,26 @@ h1 {
 
     color: #aaa2b5;
     font-size: 12px;
+    align-items: center;
+}
+
+.movie-meta span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.movie-meta .bi-star-fill {
+    color: #fbbf24;
 }
 
 .remove-button {
     width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
 
     padding: 10px;
 
@@ -211,6 +243,12 @@ h1 {
     font-weight: 700;
 
     cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.remove-button:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.5);
 }
 
 .remove-button:disabled {

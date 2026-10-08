@@ -6,7 +6,7 @@
     <header class="top-header">
 
       <div class="logo">
-        <div class="logo-icon">🎬</div>
+        <div class="logo-icon"><i class="bi bi-film"></i></div>
 
         <span>
           Cine<span>Verse</span>
@@ -14,7 +14,7 @@
       </div>
 
       <button class="back-button" routerLink="/movies">
-        ←
+        <i class="bi bi-arrow-left"></i>
       </button>
 
     </header>
@@ -68,15 +68,15 @@
         <div class="meta">
 
           <span>
-            📅 {{ movie.release_date | date:'yyyy' }}
+            <i class="bi bi-calendar3"></i> {{ movie.release_date | date:'yyyy' }}
           </span>
 
           <span>
-            ⭐ {{ movie.vote_average | number:'1.1-1' }}
+            <i class="bi bi-star-fill"></i> {{ movie.vote_average | number:'1.1-1' }}
           </span>
 
           <span>
-            🎬 {{ movie.runtime }} min
+            <i class="bi bi-clock"></i> {{ movie.runtime }} min
           </span>
 
         </div>
@@ -90,10 +90,12 @@
         <button class="favorite-button" [class.remove-favorite]="isFavorite" [disabled]="isFavoriteLoading"
           (click)="toggleFavorite()">
           <span *ngIf="!isFavoriteLoading">
-            {{ isFavorite ? '💔 Remove from Favorites' : '❤️ Add to Favorites' }}
+            <i class="bi" [ngClass]="isFavorite ? 'bi-heart-break-fill' : 'bi-heart-fill'"></i>
+            {{ isFavorite ? 'Remove from Favorites' : 'Add to Favorites' }}
           </span>
 
           <span *ngIf="isFavoriteLoading">
+            <i class="bi bi-hourglass-split"></i>
             Updating...
           </span>
         </button>

@@ -8,3 +8,12 @@ export interface CineUser {
   active: boolean;
   photoUrl?: string;
 }
+
+export interface PublicProfile {
+  uid: string;
+  firstName: string;
+  lastName: string;
+  photoUrl?: string;
+  favoriteIds: string[];
+  active: boolean;
+}

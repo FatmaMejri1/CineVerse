@@ -1,223 +1,307 @@
-<ion-content [fullscreen]="true" class="home-page">
+<ion-content [fullscreen]="true" class="mobile-home-page">
 
-  <div class="home-container">
+  <div class="app-screen">
 
-    <!-- Header -->
-    <header class="top-header">
-
-      <div class="logo">
-        <div class="logo-icon">🎬</div>
-
-        <span>
-          Cine<span>Verse</span>
-        </span>
+    <!-- ════════ TOP APP BAR ════════ -->
+    <header class="app-header">
+      <div class="brand">
+        <h1 class="logo-text">Cine<span>Verse</span></h1>
+        <span class="logo-tagline">let's stream to the max</span>
       </div>
 
-      <!-- Profile -->
-      <a routerLink="/profile" class="profile-button" aria-label="Open profile">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="profile-svg">
-          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-      </a>
+      <div class="header-actions">
+        <!-- Search -->
+        <a routerLink="/movies" class="header-icon-btn" aria-label="Search">
+          <i class="bi bi-search"></i>
+        </a>
 
+        <!-- Community Twin Matches -->
+        <a routerLink="/matching" class="header-icon-btn badge-btn" aria-label="Community">
+          <i class="bi bi-people"></i>
+          <span class="pulse-dot"></span>
+        </a>
+
+        <!-- Profile Avatar -->
+        <a routerLink="/profile" class="avatar-ring" aria-label="My Profile">
+          <img *ngIf="userPhoto" [src]="userPhoto" alt="Profile" />
+          <i *ngIf="!userPhoto" class="bi bi-person-fill"></i>
+        </a>
+      </div>
     </header>
 
 
-    <!-- Welcome -->
-    <section class="welcome-section">
-
-      <p class="eyebrow">WELCOME BACK</p>
-
-      <h1>
-        Discover your next
-        <span>favorite movie.</span>
-      </h1>
-
-      <p class="description">
-        Explore movies, build your favorites,
-        and find people who share your taste.
-      </p>
-
-    </section>
-
-
-    <!-- Search -->
-    <div class="search-box">
-
-      <span class="search-icon">⌕</span>
-
-      <input type="text" placeholder="Search movies..." aria-label="Search movies" />
-
-      <span class="search-hint">⌘ K</span>
-
-    </div>
-
-
-    <!-- TMDB connection -->
-    <div class="api-test">
-
-      <div class="api-status">
-
-        <span class="status-dot"></span>
-
-        <div>
-          <strong>Movie database</strong>
-          <small>TMDB connection</small>
-        </div>
-
-      </div>
-
-      <button class="test-button" (click)="testTmdb()">
-        Test connection
-        <span>→</span>
+    <!-- ════════ CATEGORIES FILTER TABS ════════ -->
+    <nav class="category-tabs" aria-label="Categories">
+      <button 
+        *ngFor="let cat of categories" 
+        class="tab-pill" 
+        [class.active]="selectedCategory === cat"
+        (click)="setCategory(cat)">
+        {{ cat }}
       </button>
+    </nav>
 
-    </div>
 
-
-    <!-- Main actions -->
-    <section class="section">
-
-      <div class="section-header">
-
-        <div>
-          <p class="section-label">EXPLORE</p>
-          <h2>CineVerse</h2>
+    <!-- ════════ CINEMATIC HERO BANNER ════════ -->
+    <!-- Ready state -->
+    <section class="hero-showcase" *ngIf="featuredMovie">
+      <div class="hero-card" [routerLink]="['/movie-details', featuredMovie.id]">
+        <!-- Backdrop Image with Gradient Vignette -->
+        <div class="hero-image-wrap">
+          <img 
+            [src]="(backdropBase + (featuredMovie.backdrop_path || featuredMovie.poster_path))" 
+            [alt]="featuredMovie.title" 
+            class="hero-img" />
+          <div class="hero-vignette"></div>
         </div>
 
+        <!-- Heart Favorite Button -->
+        <button 
+          class="hero-fav-btn" 
+          [class.is-favorite]="isFeaturedFavorite" 
+          (click)="toggleFeaturedFavorite($event)" 
+          aria-label="Add to favorites">
+          <i class="bi" [ngClass]="isFeaturedFavorite ? 'bi-heart-fill' : 'bi-heart'"></i>
+        </button>
+
+        <!-- Movie Info Overlay -->
+        <div class="hero-content">
+          <div class="trending-badge">
+            <span class="fire-icon"><i class="bi bi-fire"></i></span>
+            <span>Trending</span>
+          </div>
+
+          <h2 class="hero-title">{{ featuredMovie.title }}</h2>
+
+          <div class="hero-meta">
+            <span *ngIf="featuredMovie.release_date">{{ featuredMovie.release_date | date:'yyyy' }}</span>
+            <span class="bullet">•</span>
+            <span>English</span>
+            <span class="bullet">•</span>
+            <span class="rating-tag">
+              <i class="bi bi-star-fill"></i>
+              <strong>{{ featuredMovie.vote_average | number:'1.1-1' }}</strong>
+              <small>({{ featuredMovie.vote_count }})</small>
+            </span>
+          </div>
+
+          <div class="hero-cta-row">
+            <button class="watch-now-btn" [routerLink]="['/movie-details', featuredMovie.id]">
+              <span class="play-circle"><i class="bi bi-play-fill"></i></span>
+              <span>Watch Now</span>
+            </button>
+          </div>
+        </div>
       </div>
 
-
-      <div class="feature-grid">
-
-        <!-- Movies -->
-        <a class="feature-card movies-card" routerLink="/movies">
-
-          <div class="card-top">
-
-            <div class="feature-icon movies-icon">
-              🎬
-            </div>
-
-            <span class="card-arrow">↗</span>
-
-          </div>
-
-          <div class="card-content">
-
-            <h3>Browse Movies</h3>
-
-            <p>
-              Discover popular movies, explore new releases
-              and find something worth watching.
-            </p>
-
-          </div>
-
-        </a>
-
-
-        <!-- Favorites -->
-        <a class="feature-card favorites-card" routerLink="/favorites">
-
-          <div class="card-top">
-
-            <div class="feature-icon favorites-icon">
-              ❤️
-            </div>
-
-            <span class="card-arrow">↗</span>
-
-          </div>
-
-          <div class="card-content">
-
-            <h3>My Favorites</h3>
-
-            <p>
-              Keep your favorite movies in one place
-              and build your personal collection.
-            </p>
-
-          </div>
-
-        </a>
-
-
-        <!-- Profile -->
-        <a class="feature-card profile-card" routerLink="/profile">
-
-          <div class="card-top">
-
-            <div class="feature-icon profile-icon">
-              👤
-            </div>
-
-            <span class="card-arrow">↗</span>
-
-          </div>
-
-          <div class="card-content">
-
-            <h3>My Profile</h3>
-
-            <p>
-              View your personal information and
-              manage your CineVerse profile.
-            </p>
-
-          </div>
-
-        </a>
-
+      <!-- Carousel Pagination Dots -->
+      <div class="pagination-dots" *ngIf="heroMovies.length > 1">
+        <span 
+          *ngFor="let m of heroMovies; let i = index" 
+          class="dot" 
+          [class.active]="currentHeroIndex === i"
+          (click)="setHeroMovie(i)">
+        </span>
       </div>
+    </section>
 
+    <!-- Loading Skeleton Hero (shown only while first fetch occurs) -->
+    <section class="hero-showcase" *ngIf="!featuredMovie && isLoading">
+      <div class="hero-card skeleton-hero">
+        <div class="skeleton-shimmer"></div>
+        <div class="hero-content">
+          <div class="skeleton-line" style="width: 80px; height: 18px; border-radius: 10px;"></div>
+          <div class="skeleton-line" style="width: 220px; height: 28px; border-radius: 8px; margin: 10px 0;"></div>
+          <div class="skeleton-line" style="width: 140px; height: 14px; border-radius: 6px;"></div>
+          <div class="skeleton-line" style="width: 130px; height: 42px; border-radius: 25px; margin-top: 14px;"></div>
+        </div>
+      </div>
     </section>
 
 
-    <!-- Matching -->
-    <a class="matching-card" routerLink="/matching">
+    <!-- ════════ FEED SECTIONS ════════ -->
+    <div class="feed-content">
 
-      <div class="matching-icon">
-        👥
+      <!-- SECTION 1: TRENDING MOVIES (HORIZONTAL CAROUSEL) -->
+      <section class="shelf-section" *ngIf="(selectedCategory === 'ALL' || selectedCategory === 'TRENDING') && (trendingMovies.length > 0 || isLoading)">
+        <div class="shelf-header">
+          <h3>Trending Movies</h3>
+          <a routerLink="/movies" class="see-all-link">See all <i class="bi bi-chevron-right"></i></a>
+        </div>
+
+        <div class="horizontal-scroll" *ngIf="trendingMovies.length > 0">
+          <div 
+            class="media-card" 
+            *ngFor="let movie of trendingMovies"
+            [routerLink]="['/movie-details', movie.id]">
+            
+            <div class="media-thumb">
+              <img [src]="imageBase + (movie.backdrop_path || movie.poster_path)" [alt]="movie.title" loading="lazy" />
+              <div class="play-overlay">
+                <i class="bi bi-play-fill"></i>
+              </div>
+            </div>
+
+            <div class="media-info">
+              <h4 class="media-title">{{ movie.title }}</h4>
+              <div class="media-sub">
+                <span class="rating-badge">
+                  <i class="bi bi-star-fill"></i>
+                  {{ movie.vote_average | number:'1.1-1' }}
+                </span>
+                <span class="year-text">{{ movie.release_date | date:'yyyy' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skeleton for Trending -->
+        <div class="horizontal-scroll" *ngIf="trendingMovies.length === 0 && isLoading">
+          <div class="media-card skeleton-card" *ngFor="let s of [1,2,3]">
+            <div class="media-thumb skeleton-box"></div>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- SECTION 2: TOP RATED / POPULAR -->
+      <section class="shelf-section" *ngIf="(selectedCategory === 'ALL' || selectedCategory === 'TOP RATED') && (topRatedMovies.length > 0 || isLoading)">
+        <div class="shelf-header">
+          <h3>Top Rated Gems</h3>
+          <a routerLink="/movies" class="see-all-link">See all <i class="bi bi-chevron-right"></i></a>
+        </div>
+
+        <div class="horizontal-scroll poster-mode" *ngIf="topRatedMovies.length > 0">
+          <div 
+            class="poster-card" 
+            *ngFor="let movie of topRatedMovies"
+            [routerLink]="['/movie-details', movie.id]">
+            
+            <div class="poster-thumb">
+              <img [src]="imageBase + movie.poster_path" [alt]="movie.title" loading="lazy" />
+              <div class="poster-overlay">
+                <i class="bi bi-play-circle-fill"></i>
+              </div>
+              <span class="poster-rating">
+                <i class="bi bi-star-fill"></i> {{ movie.vote_average | number:'1.1-1' }}
+              </span>
+            </div>
+
+            <h4 class="poster-title">{{ movie.title }}</h4>
+          </div>
+        </div>
+
+        <!-- Skeleton for Top Rated -->
+        <div class="horizontal-scroll poster-mode" *ngIf="topRatedMovies.length === 0 && isLoading">
+          <div class="poster-card skeleton-card" *ngFor="let s of [1,2,3,4]">
+            <div class="poster-thumb skeleton-box"></div>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- SECTION 3: MOVIE COMMUNITY & DISCUSSIONS -->
+      <section class="shelf-section" *ngIf="selectedCategory === 'ALL' || selectedCategory === 'COMMUNITY'">
+        <div class="shelf-header">
+          <h3>Movie Community</h3>
+          <a routerLink="/matching" class="see-all-link">Explore <i class="bi bi-chevron-right"></i></a>
+        </div>
+
+        <div class="matching-banner" routerLink="/matching">
+          <div class="matching-left">
+            <span class="match-pill"><i class="bi bi-chat-heart-fill"></i> Movie Lovers</span>
+            <h4>Meet Fellow Cinema Fans</h4>
+            <p>Connect with people who share your passion for movies, see what other members are watching, and join the discussion.</p>
+            <span class="match-action">Explore Community <i class="bi bi-arrow-right"></i></span>
+          </div>
+
+          <div class="community-visual">
+            <div class="visual-icon-box">
+              <i class="bi bi-people-fill"></i>
+            </div>
+            <span class="community-tag">
+              <i class="bi bi-chat-dots-fill"></i> Chat & Match
+            </span>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- SECTION 4: MY FAVORITES PLAYLIST -->
+      <section class="shelf-section" *ngIf="(selectedCategory === 'ALL' || selectedCategory === 'FAVORITES') && favorites.length > 0">
+        <div class="shelf-header">
+          <h3>My Playlist</h3>
+          <a routerLink="/favorites" class="see-all-link">View all ({{ favorites.length }}) <i class="bi bi-chevron-right"></i></a>
+        </div>
+
+        <div class="horizontal-scroll poster-mode">
+          <div 
+            class="poster-card" 
+            *ngFor="let fav of favorites"
+            [routerLink]="['/movie-details', fav.movieId]">
+            
+            <div class="poster-thumb">
+              <img [src]="imageBase + fav.posterPath" [alt]="fav.title" loading="lazy" />
+              <span class="favorite-heart-tag"><i class="bi bi-heart-fill"></i></span>
+            </div>
+
+            <h4 class="poster-title">{{ fav.title }}</h4>
+          </div>
+        </div>
+      </section>
+
+      <!-- EMPTY FAVORITES CALLOUT (IF IN FAVORITES TAB & NONE SAVED) -->
+      <div class="empty-fav-callout" *ngIf="selectedCategory === 'FAVORITES' && favorites.length === 0 && !isLoading">
+        <div class="empty-icon"><i class="bi bi-heart"></i></div>
+        <h4>Your playlist is empty</h4>
+        <p>Save movies by clicking the heart button to easily access them anytime.</p>
+        <a routerLink="/movies" class="discover-btn">Discover Movies</a>
       </div>
 
-      <div class="matching-content">
+    </div>
 
-        <p class="small-title">
-          FIND YOUR MOVIE TWIN
-        </p>
-
-        <h2>
-          Discover people who share your taste.
-        </h2>
-
-        <p>
-          Compare your favorite movies and discover
-          users with more than 75% similarity.
-        </p>
-
-      </div>
-
-      <div class="matching-arrow">
-        →
-      </div>
-
-    </a>
-
-
-    <!-- Footer -->
-    <footer class="home-footer">
-
-      <span>© 2026 CineVerse</span>
-
-      <span class="footer-dot">•</span>
-
-      <span>Powered by TMDB</span>
-
-    </footer>
+    <!-- Padding for bottom nav -->
+    <div class="bottom-spacer"></div>
 
   </div>
+
+
+  <!-- ════════ SLEEK BOTTOM NAVIGATION BAR ════════ -->
+  <nav class="mobile-bottom-nav">
+    <a routerLink="/home" routerLinkActive="active" class="nav-tab" aria-label="Home">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-house-door-fill"></i>
+      </div>
+      <span>Home</span>
+    </a>
+
+    <a routerLink="/movies" routerLinkActive="active" class="nav-tab" aria-label="Movies">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-play-circle-fill"></i>
+      </div>
+      <span>Movies</span>
+    </a>
+
+    <a routerLink="/favorites" routerLinkActive="active" class="nav-tab" aria-label="Favorites">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-heart-fill"></i>
+      </div>
+      <span>Favorites</span>
+    </a>
+
+    <a routerLink="/matching" routerLinkActive="active" class="nav-tab" aria-label="Community">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <span>Community</span>
+    </a>
+
+    <a routerLink="/profile" routerLinkActive="active" class="nav-tab" aria-label="Profile">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-person-fill"></i>
+      </div>
+      <span>Profile</span>
+    </a>
+  </nav>
 
 </ion-content>

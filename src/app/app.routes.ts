@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
+
   {
     path: '',
     redirectTo: 'login',
@@ -54,6 +55,14 @@ export const routes: Routes = [
   },
 
   {
+    path: 'matching',
+    loadComponent: () =>
+      import('./pages/matching/matching.page').then(
+        (m) => m.MatchingPage
+      ),
+  },
+
+  {
     path: 'movie-details/:id',
     loadComponent: () =>
       import('./pages/movie-details/movie-details.page').then(
@@ -73,4 +82,5 @@ export const routes: Routes = [
     path: '**',
     redirectTo: 'login',
   },
+
 ];

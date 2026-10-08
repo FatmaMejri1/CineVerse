@@ -6,7 +6,7 @@
     <header class="page-header">
 
       <a routerLink="/home" class="back-button" aria-label="Go back to Home">
-        ←
+        <i class="bi bi-arrow-left"></i>
       </a>
 
       <div class="header-text">
@@ -31,7 +31,8 @@
     <div class="error-state" *ngIf="!isLoading && errorMessage">
       <p>{{ errorMessage }}</p>
       <button class="retry-button" (click)="loadProfile()">
-        Try Again
+        <i class="bi bi-arrow-clockwise"></i>
+        <span>Try Again</span>
       </button>
     </div>
 
@@ -43,20 +44,29 @@
       <section class="profile-card">
 
         <div class="profile-avatar-wrap" (click)="photoInput.click()">
-          <img *ngIf="userProfile?.photoUrl" [src]="userProfile?.photoUrl" alt="Profile photo"
+          <img *ngIf="userProfile?.photoUrl" [src]="userProfile!.photoUrl" alt="Profile photo"
             class="profile-avatar-img" />
           <div *ngIf="!userProfile?.photoUrl" class="profile-avatar-placeholder">
-            {{ userProfile?.firstName ? (userProfile?.firstName[0] | uppercase) : '👤' }}
+            <span *ngIf="userProfile?.firstName">{{ userProfile!.firstName[0] | uppercase }}</span>
+            <i *ngIf="!userProfile?.firstName" class="bi bi-person-fill"></i>
           </div>
-          <span class="avatar-badge" title="Change photo">📷</span>
+          <span class="avatar-badge" title="Change photo">
+            <i class="bi bi-camera-fill"></i>
+          </span>
         </div>
 
         <div class="profile-info">
           <h2>{{ userProfile?.firstName }} {{ userProfile?.lastName }}</h2>
           <p class="profile-email">{{ userProfile?.email || email }}</p>
           <div class="profile-tags">
-            <span class="badge role-badge">🎬 {{ (userProfile?.role || 'Member') | titlecase }}</span>
-            <span class="badge active-badge" *ngIf="userProfile?.active !== false">● Active</span>
+            <span class="badge role-badge">
+              <i class="bi bi-film"></i>
+              <span>{{ (userProfile?.role || 'Member') | titlecase }}</span>
+            </span>
+            <span class="badge active-badge" *ngIf="userProfile?.active !== false">
+              <i class="bi bi-check-circle-fill"></i>
+              <span>Active</span>
+            </span>
           </div>
         </div>
 
@@ -67,7 +77,7 @@
       <section class="section">
 
         <div class="section-title">
-          <span class="section-icon">👤</span>
+          <span class="section-icon"><i class="bi bi-person-badge"></i></span>
           <div>
             <p class="section-label">PERSONAL INFORMATION</p>
             <h2>Account Details</h2>
@@ -77,7 +87,7 @@
         <div class="info-list">
 
           <div class="info-item">
-            <div class="info-icon">👤</div>
+            <div class="info-icon"><i class="bi bi-person"></i></div>
             <div class="info-details">
               <span>First Name</span>
               <strong>{{ userProfile?.firstName || '—' }}</strong>
@@ -85,7 +95,7 @@
           </div>
 
           <div class="info-item">
-            <div class="info-icon">👤</div>
+            <div class="info-icon"><i class="bi bi-person"></i></div>
             <div class="info-details">
               <span>Last Name</span>
               <strong>{{ userProfile?.lastName || '—' }}</strong>
@@ -93,15 +103,15 @@
           </div>
 
           <div class="info-item">
-            <div class="info-icon">🎂</div>
+            <div class="info-icon"><i class="bi bi-calendar-event"></i></div>
             <div class="info-details">
               <span>Age</span>
-              <strong>{{ userProfile?.age ? (userProfile?.age + ' years old') : '—' }}</strong>
+              <strong>{{ userProfile?.age ? (userProfile!.age + ' years old') : '—' }}</strong>
             </div>
           </div>
 
           <div class="info-item">
-            <div class="info-icon">✉️</div>
+            <div class="info-icon"><i class="bi bi-envelope"></i></div>
             <div class="info-details">
               <span>Email</span>
               <strong>{{ userProfile?.email || email || '—' }}</strong>
@@ -117,7 +127,7 @@
       <section class="section security-section">
 
         <div class="section-title">
-          <span class="section-icon">🔐</span>
+          <span class="section-icon"><i class="bi bi-shield-lock"></i></span>
           <div>
             <p class="section-label">SECURITY & CREDENTIALS</p>
             <h2>Change Password</h2>
@@ -130,7 +140,8 @@
 
         <!-- Toggle Button to Open Form if closed -->
         <button *ngIf="!showPasswordSection" class="secondary-button" (click)="togglePasswordSection()">
-          🔑 Change My Password
+          <i class="bi bi-key-fill"></i>
+          <span>Change My Password</span>
         </button>
 
         <!-- Collapsible Password Form -->
@@ -170,18 +181,21 @@
 
           <!-- Error Alert -->
           <div class="alert-box error" *ngIf="passwordErrorMessage">
-            ⚠️ {{ passwordErrorMessage }}
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span>{{ passwordErrorMessage }}</span>
           </div>
 
           <!-- Success Alert -->
           <div class="alert-box success" *ngIf="passwordSuccessMessage">
-            {{ passwordSuccessMessage }}
+            <i class="bi bi-check-circle-fill"></i>
+            <span>{{ passwordSuccessMessage }}</span>
           </div>
 
           <div class="form-actions">
             <button type="submit" class="primary-button"
               [disabled]="isPasswordLoading || !currentPassword || !newPassword || !confirmPassword">
-              {{ isPasswordLoading ? 'Updating Password...' : 'Save New Password' }}
+              <i class="bi bi-check-lg" *ngIf="!isPasswordLoading"></i>
+              <span>{{ isPasswordLoading ? 'Updating Password...' : 'Save New Password' }}</span>
             </button>
 
             <button type="button" class="cancel-button" [disabled]="isPasswordLoading"
@@ -199,7 +213,7 @@
       <section class="section camera-section">
 
         <div class="section-title">
-          <span class="section-icon">📸</span>
+          <span class="section-icon"><i class="bi bi-camera"></i></span>
           <div>
             <p class="section-label">PROFILE PHOTO</p>
             <h2>Your Picture</h2>
@@ -213,7 +227,8 @@
         <input #photoInput type="file" accept="image/*" (change)="onPhotoSelected($event)" style="display: none;" />
 
         <button class="camera-button" (click)="photoInput.click()">
-          📸 Change Profile Photo
+          <i class="bi bi-camera-fill"></i>
+          <span>Change Profile Photo</span>
         </button>
 
       </section>
@@ -223,11 +238,13 @@
       <div class="action-buttons">
 
         <a routerLink="/home" class="home-button">
-          ← Back to Home
+          <i class="bi bi-house-door-fill"></i>
+          <span>Back to Home</span>
         </a>
 
         <button class="logout-button" (click)="logout()">
-          🚪 Sign Out
+          <i class="bi bi-box-arrow-right"></i>
+          <span>Sign Out</span>
         </button>
 
       </div>
