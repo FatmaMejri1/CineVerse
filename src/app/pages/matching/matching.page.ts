@@ -135,11 +135,7 @@ export class MatchingPage implements OnInit {
       this.newCommentTexts[profileUid] = '';
     } catch (err: any) {
       console.error('Failed to post comment:', err);
-      if (err?.code === 'permission-denied' || String(err?.message || '').includes('permission')) {
-        this.commentErrorMap[profileUid] = 'Firestore rules require publish: copy rules from firestore.rules into your Firebase Console.';
-      } else {
-        this.commentErrorMap[profileUid] = err?.message || 'Failed to post comment.';
-      }
+      this.commentErrorMap[profileUid] = 'Could not post your message. Please try again.';
     } finally {
       this.submittingCommentMap[profileUid] = false;
       this.cdr.detectChanges();
