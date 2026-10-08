@@ -7,7 +7,10 @@ import { TmdbService } from '../../core/services/tmdb.service';
 import { UserService } from '../../core/services/user.service';
 import { AuthService } from '../../core/services/auth.service';
 import { FavoritesService, FavoriteItem } from '../../core/services/favorites';
+import { WatchlistService } from '../../core/services/watchlist.service';
+import { RecommendationService } from '../../core/services/recommendation.service';
 import { CineUser } from '../../core/models/user.model';
+import { WatchlistMovie, RecommendationMovie } from '../../core/models/movie-features.model';
 
 @Component({
   selector: 'app-home',
@@ -27,6 +30,8 @@ export class HomePage implements OnInit {
   private static cachedMovies: any[] = [];
   private static cachedFavorites: FavoriteItem[] = [];
   private static cachedProfile: CineUser | null = null;
+  private static cachedRecommendations: RecommendationMovie[] = [];
+  private static cachedWatchlist: WatchlistMovie[] = [];
 
   imageBase = 'https://image.tmdb.org/t/p/w780';
   backdropBase = 'https://image.tmdb.org/t/p/w1280';
@@ -37,13 +42,17 @@ export class HomePage implements OnInit {
   trendingMovies: any[] = [];
   topRatedMovies: any[] = [];
   favorites: FavoriteItem[] = [];
+  recommendations: RecommendationMovie[] = [];
+  watchlist: WatchlistMovie[] = [];
+  recommendationReason: string = '';
+  isPersonalizedRecs: boolean = false;
 
   userProfile: CineUser | null = null;
   userPhoto: string = '';
   isFeaturedFavorite = false;
 
   selectedCategory: string = 'ALL';
-  categories = ['ALL', 'TRENDING', 'TOP RATED', 'COMMUNITY', 'FAVORITES'];
+  categories = ['ALL', 'RECOMMENDED', 'TRENDING', 'TOP RATED', 'WATCHLIST', 'COMMUNITY', 'FAVORITES'];
 
   currentHeroIndex = 0;
   heroMovies: any[] = [];
@@ -52,7 +61,9 @@ export class HomePage implements OnInit {
     private tmdbService: TmdbService,
     private userService: UserService,
     private authService: AuthService,
-    private favoritesService: FavoritesService
+    private favoritesService: FavoritesService,
+    private watchlistService: WatchlistService,
+    private recommendationService: RecommendationService
   ) {
     // Instant restore from cache if available so UI is rich from frame 0
     if (HomePage.cachedMovies.length > 0) {
@@ -61,6 +72,12 @@ export class HomePage implements OnInit {
     }
     if (HomePage.cachedFavorites.length > 0) {
       this.favorites = HomePage.cachedFavorites;
+    }
+    if (HomePage.cachedRecommendations.length > 0) {
+      this.recommendations = HomePage.cachedRecommendations;
+    }
+    if (HomePage.cachedWatchlist.length > 0) {
+      this.watchlist = HomePage.cachedWatchlist;
     }
     if (HomePage.cachedProfile) {
       this.userProfile = HomePage.cachedProfile;
@@ -108,7 +125,7 @@ export class HomePage implements OnInit {
       this.isLoading = false;
     }
 
-    // 2. Fetch User & Favorites
+    // 2. Fetch User & Features Data
     await this.refreshUserData();
   }
 
@@ -128,6 +145,26 @@ export class HomePage implements OnInit {
         this.favorites = favs;
 
         this.checkFeaturedFavorite();
+
+        // Load Watchlist
+        try {
+          const wl = await this.watchlistService.getWatchlist();
+          this.watchlist = wl;
+          HomePage.cachedWatchlist = wl;
+        } catch (wlErr) {
+          console.warn('Could not fetch watchlist:', wlErr);
+        }
+
+        // Load Personalized Recommendations
+        try {
+          const recResult = await this.recommendationService.getRecommendations();
+          this.recommendations = recResult.movies;
+          this.recommendationReason = recResult.reason;
+          this.isPersonalizedRecs = recResult.personalized;
+          HomePage.cachedRecommendations = recResult.movies;
+        } catch (recErr) {
+          console.warn('Could not fetch recommendations:', recErr);
+        }
       }
     } catch (e) {
       console.warn('Could not fetch user/favorites info:', e);
@@ -180,5 +217,45 @@ export class HomePage implements OnInit {
 
   setCategory(category: string): void {
     this.selectedCategory = category;
+  }
+
+  /**
+   * Enables smooth horizontal drag scrolling with mouse or touch
+   * particularly useful in Android Studio Emulator and desktop testing
+   */
+  onDragStart(event: PointerEvent): void {
+    const el = event.currentTarget as HTMLElement;
+    if (!el) return;
+
+    const startX = event.clientX;
+    const scrollLeft = el.scrollLeft;
+    let isDragging = false;
+
+    const onPointerMove = (e: PointerEvent) => {
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > 4) {
+        isDragging = true;
+      }
+      el.scrollLeft = scrollLeft - dx;
+    };
+
+    const onPointerUp = (e: PointerEvent) => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
+
+      if (isDragging) {
+        // Suppress accidental card navigation click when user was dragging
+        const captureClick = (clickEvent: MouseEvent) => {
+          clickEvent.stopPropagation();
+          clickEvent.preventDefault();
+        };
+        el.addEventListener('click', captureClick, { capture: true, once: true });
+      }
+    };
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
   }
 }

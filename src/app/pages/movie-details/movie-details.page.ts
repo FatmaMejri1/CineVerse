@@ -5,8 +5,11 @@ import { IonContent } from '@ionic/angular';
 
 import { TmdbService } from '../../core/services/tmdb.service';
 import { FavoritesService } from '../../core/services/favorites';
-import { environment } from '../../../environments/environment';
+import { WatchlistService } from '../../core/services/watchlist.service';
+import { RatingsService } from '../../core/services/ratings.service';
 import { AuthService } from '../../core/services/auth.service';
+import { environment } from '../../../environments/environment';
+
 @Component({
   selector: 'app-movie-details',
   templateUrl: './movie-details.page.html',
@@ -21,26 +24,38 @@ import { AuthService } from '../../core/services/auth.service';
 export class MovieDetailsPage implements OnInit {
 
   movie: any = null;
-
   imageBase = environment.tmdb.imageBase;
 
   isLoading = true;
+  errorMessage = '';
+
+  // Favorites
   isFavorite = false;
   isFavoriteLoading = false;
-
-  errorMessage = '';
   favoriteMessage = '';
+
+  // Watchlist
+  isWatchlist = false;
+  isWatchlistLoading = false;
+  watchlistMessage = '';
+
+  // Ratings (1 to 5 stars)
+  userRating: number | null = null;
+  isRatingLoading = false;
+  ratingFeedback = '';
+  stars = [1, 2, 3, 4, 5];
 
   constructor(
     private route: ActivatedRoute,
     private tmdbService: TmdbService,
     private favoritesService: FavoritesService,
+    private watchlistService: WatchlistService,
+    private ratingsService: RatingsService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef
   ) { }
 
   async ngOnInit(): Promise<void> {
-
     const movieId = this.route.snapshot.paramMap.get('id');
 
     if (!movieId) {
@@ -53,116 +68,158 @@ export class MovieDetailsPage implements OnInit {
   }
 
   async loadMovie(movieId: string): Promise<void> {
-
     this.isLoading = true;
     this.errorMessage = '';
 
     try {
-
-      const data =
-        await this.tmdbService.getMovieDetails(movieId);
-
+      const data = await this.tmdbService.getMovieDetails(movieId);
       this.movie = data;
 
-      console.log('Movie details:', this.movie);
-
-      await this.checkFavorite(movieId);
+      // Check current user status for this movie
+      await Promise.all([
+        this.checkFavorite(movieId),
+        this.checkWatchlist(movieId),
+        this.checkRating(movieId)
+      ]);
 
     } catch (error) {
-
       console.error('Movie details error:', error);
-
-      this.errorMessage =
-        'Unable to load movie details.';
-
+      this.errorMessage = 'Unable to load movie details.';
     } finally {
-
       this.isLoading = false;
       this.cdr.detectChanges();
-
     }
   }
+
+  // ----------------------------------------------------
+  // FAVORITES
+  // ----------------------------------------------------
 
   async checkFavorite(movieId: string): Promise<void> {
     try {
-      const user = await this.authService.waitForAuth();
-
-      if (!user) {
-        console.log('No authenticated user.');
-        this.isFavorite = false;
-        return;
-      }
-
-      this.isFavorite =
-        await this.favoritesService.isFavorite(movieId);
-
-      console.log(
-        'Favorite status:',
-        this.isFavorite
-      );
-
-    } catch (error) {
-      console.error(
-        'Error checking favorite:',
-        error
-      );
-
+      this.isFavorite = await this.favoritesService.isFavorite(movieId);
+    } catch {
       this.isFavorite = false;
-
-    } finally {
-      this.cdr.detectChanges();
     }
   }
-  async toggleFavorite(): Promise<void> {
 
-    if (!this.movie) {
-      return;
-    }
+  async toggleFavorite(): Promise<void> {
+    if (!this.movie) return;
 
     this.isFavoriteLoading = true;
     this.favoriteMessage = '';
 
     try {
-
       if (this.isFavorite) {
-
-        await this.favoritesService.removeFavorite(
-          this.movie.id
-        );
-
+        await this.favoritesService.removeFavorite(this.movie.id);
         this.isFavorite = false;
-
-        this.favoriteMessage =
-          'Removed from favorites.';
-
+        this.favoriteMessage = 'Removed from favorites.';
       } else {
-
-        await this.favoritesService.addFavorite(
-          this.movie
-        );
-
+        await this.favoritesService.addFavorite(this.movie);
         this.isFavorite = true;
-
-        this.favoriteMessage =
-          'Added to favorites! ❤️';
+        this.favoriteMessage = 'Added to favorites!';
       }
-
     } catch (error: any) {
-
-      console.error(
-        'Favorite error:',
-        error
-      );
-
-      this.favoriteMessage =
-        error?.message ||
-        'Unable to update favorites.';
-
+      console.error('Favorite error:', error);
+      this.favoriteMessage = error?.message || 'Unable to update favorites.';
     } finally {
-
       this.isFavoriteLoading = false;
       this.cdr.detectChanges();
+      setTimeout(() => {
+        this.favoriteMessage = '';
+        this.cdr.detectChanges();
+      }, 3000);
+    }
+  }
 
+  // ----------------------------------------------------
+  // WATCHLIST
+  // ----------------------------------------------------
+
+  async checkWatchlist(movieId: string): Promise<void> {
+    try {
+      this.isWatchlist = await this.watchlistService.isInWatchlist(movieId);
+    } catch {
+      this.isWatchlist = false;
+    }
+  }
+
+  async toggleWatchlist(): Promise<void> {
+    if (!this.movie) return;
+
+    this.isWatchlistLoading = true;
+    this.watchlistMessage = '';
+
+    try {
+      const added = await this.watchlistService.toggleWatchlist(this.movie);
+      this.isWatchlist = added;
+      this.watchlistMessage = added ? 'Saved to your watchlist!' : 'Removed from watchlist.';
+    } catch (error: any) {
+      console.error('Watchlist error:', error);
+      this.watchlistMessage = error?.message || 'Unable to update watchlist.';
+    } finally {
+      this.isWatchlistLoading = false;
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.watchlistMessage = '';
+        this.cdr.detectChanges();
+      }, 3000);
+    }
+  }
+
+  // ----------------------------------------------------
+  // USER RATINGS (1 TO 5 STARS)
+  // ----------------------------------------------------
+
+  async checkRating(movieId: string): Promise<void> {
+    try {
+      this.userRating = await this.ratingsService.getUserRating(movieId);
+    } catch {
+      this.userRating = null;
+    }
+  }
+
+  async rateMovie(star: number): Promise<void> {
+    if (!this.movie) return;
+
+    this.isRatingLoading = true;
+    this.ratingFeedback = '';
+
+    try {
+      await this.ratingsService.setRating(this.movie, star);
+      this.userRating = star;
+      this.ratingFeedback = `You rated this ${star}/5 stars!`;
+    } catch (err: any) {
+      console.error('Rating error:', err);
+      this.ratingFeedback = err?.message || 'Failed to submit rating.';
+    } finally {
+      this.isRatingLoading = false;
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.ratingFeedback = '';
+        this.cdr.detectChanges();
+      }, 3500);
+    }
+  }
+
+  async removeRating(): Promise<void> {
+    if (!this.movie) return;
+
+    this.isRatingLoading = true;
+
+    try {
+      await this.ratingsService.removeRating(this.movie.id);
+      this.userRating = null;
+      this.ratingFeedback = 'Rating removed.';
+    } catch (err: any) {
+      console.error('Remove rating error:', err);
+    } finally {
+      this.isRatingLoading = false;
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.ratingFeedback = '';
+        this.cdr.detectChanges();
+      }, 2500);
     }
   }
 }

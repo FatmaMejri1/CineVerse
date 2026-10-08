@@ -1,0 +1,99 @@
+<ion-content class="watchlist-page">
+
+  <div class="watchlist-container">
+
+    <!-- Header -->
+    <div class="page-header">
+      <a routerLink="/home" class="back-button" aria-label="Back to Home">
+        <i class="bi bi-arrow-left"></i>
+      </a>
+
+      <div>
+        <p class="eyebrow">SAVED TO WATCH</p>
+        <h1>My Watchlist <i class="bi bi-bookmark-fill title-bookmark"></i></h1>
+        <p class="subtitle">Movies you plan to watch later</p>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>Loading your watchlist...</p>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-state" *ngIf="!isLoading && errorMessage">
+      <p>{{ errorMessage }}</p>
+      <button class="retry-button" (click)="loadWatchlist()">
+        <i class="bi bi-arrow-clockwise"></i> Try Again
+      </button>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isLoading && !errorMessage && watchlist.length === 0">
+      <div class="empty-icon">
+        <i class="bi bi-bookmark"></i>
+      </div>
+
+      <h2>Your watchlist is empty</h2>
+
+      <p>
+        Save movies you want to watch later by clicking the bookmark button on any movie details page.
+      </p>
+
+      <a routerLink="/movies" class="browse-button">
+        <i class="bi bi-play-circle-fill"></i> Browse Movies
+      </a>
+    </div>
+
+    <!-- Watchlist Grid -->
+    <div class="watchlist-grid" *ngIf="!isLoading && !errorMessage && watchlist.length > 0">
+
+      <div class="movie-card" *ngFor="let movie of watchlist">
+
+        <a [routerLink]="['/movie-details', movie.movieId]" class="poster-link">
+          <img *ngIf="movie.posterPath" [src]="imageBase + movie.posterPath" [alt]="movie.title" loading="lazy" />
+
+          <div class="no-poster" *ngIf="!movie.posterPath">
+            <i class="bi bi-film"></i>
+          </div>
+        </a>
+
+        <div class="movie-info">
+          <h2>{{ movie.title }}</h2>
+
+          <div class="movie-meta">
+            <span *ngIf="movie.releaseDate">
+              <i class="bi bi-calendar3"></i>
+              {{ movie.releaseDate | date:'yyyy' }}
+            </span>
+
+            <span *ngIf="movie.voteAverage">
+              <i class="bi bi-star-fill"></i>
+              {{ movie.voteAverage | number:'1.1-1' }}
+            </span>
+          </div>
+
+          <div class="card-actions">
+            <a [routerLink]="['/movie-details', movie.movieId]" class="details-link">
+              <i class="bi bi-info-circle"></i> Details
+            </a>
+
+            <button 
+              class="remove-button" 
+              [disabled]="removingKey === movie.movieKey"
+              (click)="removeFromWatchlist(movie)"
+              title="Remove from watchlist">
+              <i class="bi" [ngClass]="removingKey === movie.movieKey ? 'bi-hourglass-split' : 'bi-trash'"></i>
+              <span>{{ removingKey === movie.movieKey ? '...' : 'Remove' }}</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</ion-content>

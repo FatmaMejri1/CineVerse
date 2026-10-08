@@ -98,6 +98,24 @@
   box-shadow: 0 0 8px #ec4899;
 }
 
+.badge-num {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  background: linear-gradient(135deg, #a855f7, #ec4899);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 10px;
+  min-width: 17px;
+  height: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  box-shadow: 0 2px 6px rgba(168, 85, 247, 0.5);
+}
+
 .avatar-ring {
   width: 38px;
   height: 38px;
@@ -133,8 +151,13 @@
   gap: 10px;
   padding: 12px 20px;
   overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+  user-select: none;
+  -webkit-user-select: none;
 
   &::-webkit-scrollbar {
     display: none;
@@ -416,6 +439,20 @@
     letter-spacing: -0.3px;
   }
 
+  .shelf-subtitle {
+    display: block;
+    font-size: 11px;
+    color: #c084fc;
+    font-weight: 500;
+    margin-top: 2px;
+    letter-spacing: 0.1px;
+
+    i {
+      font-size: 11px;
+      margin-right: 2px;
+    }
+  }
+
   .see-all-link {
     font-size: 12px;
     font-weight: 600;
@@ -438,8 +475,18 @@
   gap: 14px;
   padding: 4px 20px 10px;
   overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
 
   &::-webkit-scrollbar {
     display: none;
@@ -454,6 +501,8 @@
   color: inherit;
   cursor: pointer;
   transition: transform 0.2s ease;
+  user-select: none;
+  -webkit-user-drag: none;
 
   &:hover {
     transform: translateY(-3px);
@@ -473,6 +522,9 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    pointer-events: none;
+    -webkit-user-drag: none;
+    user-select: none;
   }
 
   .play-overlay {
@@ -496,6 +548,32 @@
 
   &:hover .play-overlay {
     transform: scale(1.1);
+  }
+
+  .rec-match-pill {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    background: rgba(15, 12, 30, 0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    color: #e9d5ff;
+    font-size: 10px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: calc(100% - 16px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    i {
+      color: #c084fc;
+      font-size: 9px;
+    }
   }
 }
 
@@ -569,6 +647,9 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      pointer-events: none;
+      -webkit-user-drag: none;
+      user-select: none;
     }
 
     .poster-overlay {
@@ -622,6 +703,22 @@
       color: #ffffff;
       font-size: 12px;
       box-shadow: 0 2px 8px rgba(236, 72, 153, 0.5);
+    }
+
+    .watchlist-bookmark-tag {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(168, 85, 247, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-size: 12px;
+      box-shadow: 0 2px 8px rgba(168, 85, 247, 0.5);
     }
   }
 

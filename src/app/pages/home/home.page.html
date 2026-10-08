@@ -15,6 +15,12 @@
           <i class="bi bi-search"></i>
         </a>
 
+        <!-- Watchlist -->
+        <a routerLink="/watchlist" class="header-icon-btn" aria-label="Watchlist">
+          <i class="bi bi-bookmark-fill"></i>
+          <span class="badge-num" *ngIf="watchlist.length > 0">{{ watchlist.length }}</span>
+        </a>
+
         <!-- Community Twin Matches -->
         <a routerLink="/matching" class="header-icon-btn badge-btn" aria-label="Community">
           <i class="bi bi-people"></i>
@@ -31,7 +37,7 @@
 
 
     <!-- ════════ CATEGORIES FILTER TABS ════════ -->
-    <nav class="category-tabs" aria-label="Categories">
+    <nav class="category-tabs" (pointerdown)="onDragStart($event)" aria-label="Categories">
       <button 
         *ngFor="let cat of categories" 
         class="tab-pill" 
@@ -122,6 +128,48 @@
     <!-- ════════ FEED SECTIONS ════════ -->
     <div class="feed-content">
 
+      <!-- SECTION 0: RECOMMENDED FOR YOU (PERSONALIZED) -->
+      <section class="shelf-section" *ngIf="(selectedCategory === 'ALL' || selectedCategory === 'RECOMMENDED') && recommendations.length > 0">
+        <div class="shelf-header">
+          <div>
+            <h3>Recommended For You</h3>
+            <span class="shelf-subtitle" *ngIf="recommendationReason">
+              <i class="bi bi-stars"></i> {{ recommendationReason }}
+            </span>
+          </div>
+          <a routerLink="/movies" class="see-all-link">More <i class="bi bi-chevron-right"></i></a>
+        </div>
+
+        <div class="horizontal-scroll" (pointerdown)="onDragStart($event)">
+          <div 
+            class="media-card" 
+            *ngFor="let rec of recommendations"
+            [routerLink]="['/movie-details', rec.id]">
+            
+            <div class="media-thumb">
+              <img [src]="imageBase + (rec.backdrop_path || rec.poster_path)" [alt]="rec.title" loading="lazy" />
+              <div class="play-overlay">
+                <i class="bi bi-play-fill"></i>
+              </div>
+              <span class="rec-match-pill" *ngIf="rec.matchReason">
+                <i class="bi bi-magic"></i> {{ rec.matchReason }}
+              </span>
+            </div>
+
+            <div class="media-info">
+              <h4 class="media-title">{{ rec.title }}</h4>
+              <div class="media-sub">
+                <span class="rating-badge">
+                  <i class="bi bi-star-fill"></i>
+                  {{ rec.vote_average | number:'1.1-1' }}
+                </span>
+                <span class="year-text" *ngIf="rec.release_date">{{ rec.release_date | date:'yyyy' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- SECTION 1: TRENDING MOVIES (HORIZONTAL CAROUSEL) -->
       <section class="shelf-section" *ngIf="(selectedCategory === 'ALL' || selectedCategory === 'TRENDING') && (trendingMovies.length > 0 || isLoading)">
         <div class="shelf-header">
@@ -129,7 +177,7 @@
           <a routerLink="/movies" class="see-all-link">See all <i class="bi bi-chevron-right"></i></a>
         </div>
 
-        <div class="horizontal-scroll" *ngIf="trendingMovies.length > 0">
+        <div class="horizontal-scroll" (pointerdown)="onDragStart($event)" *ngIf="trendingMovies.length > 0">
           <div 
             class="media-card" 
             *ngFor="let movie of trendingMovies"
@@ -171,7 +219,7 @@
           <a routerLink="/movies" class="see-all-link">See all <i class="bi bi-chevron-right"></i></a>
         </div>
 
-        <div class="horizontal-scroll poster-mode" *ngIf="topRatedMovies.length > 0">
+        <div class="horizontal-scroll poster-mode" (pointerdown)="onDragStart($event)" *ngIf="topRatedMovies.length > 0">
           <div 
             class="poster-card" 
             *ngFor="let movie of topRatedMovies"
@@ -200,7 +248,45 @@
       </section>
 
 
-      <!-- SECTION 3: MOVIE COMMUNITY & DISCUSSIONS -->
+      <!-- SECTION 3: YOUR WATCHLIST -->
+      <section class="shelf-section" *ngIf="(selectedCategory === 'ALL' || selectedCategory === 'WATCHLIST') && watchlist.length > 0">
+        <div class="shelf-header">
+          <div>
+            <h3>Your Watchlist</h3>
+            <span class="shelf-subtitle">Saved for later</span>
+          </div>
+          <a routerLink="/watchlist" class="see-all-link">View all ({{ watchlist.length }}) <i class="bi bi-chevron-right"></i></a>
+        </div>
+
+        <div class="horizontal-scroll poster-mode" (pointerdown)="onDragStart($event)">
+          <div 
+            class="poster-card" 
+            *ngFor="let item of watchlist"
+            [routerLink]="['/movie-details', item.movieId]">
+            
+            <div class="poster-thumb">
+              <img [src]="imageBase + item.posterPath" [alt]="item.title" loading="lazy" />
+              <span class="watchlist-bookmark-tag"><i class="bi bi-bookmark-fill"></i></span>
+              <span class="poster-rating" *ngIf="item.voteAverage">
+                <i class="bi bi-star-fill"></i> {{ item.voteAverage | number:'1.1-1' }}
+              </span>
+            </div>
+
+            <h4 class="poster-title">{{ item.title }}</h4>
+          </div>
+        </div>
+      </section>
+
+      <!-- EMPTY WATCHLIST CALLOUT (IF IN WATCHLIST TAB & NONE SAVED) -->
+      <div class="empty-fav-callout" *ngIf="selectedCategory === 'WATCHLIST' && watchlist.length === 0 && !isLoading">
+        <div class="empty-icon"><i class="bi bi-bookmark"></i></div>
+        <h4>Your watchlist is empty</h4>
+        <p>Save movies to watch later by clicking the bookmark button on any movie.</p>
+        <a routerLink="/movies" class="discover-btn">Browse Movies</a>
+      </div>
+
+
+      <!-- SECTION 4: MOVIE COMMUNITY & DISCUSSIONS -->
       <section class="shelf-section" *ngIf="selectedCategory === 'ALL' || selectedCategory === 'COMMUNITY'">
         <div class="shelf-header">
           <h3>Movie Community</h3>
@@ -227,14 +313,14 @@
       </section>
 
 
-      <!-- SECTION 4: MY FAVORITES PLAYLIST -->
+      <!-- SECTION 5: MY FAVORITES PLAYLIST -->
       <section class="shelf-section" *ngIf="(selectedCategory === 'ALL' || selectedCategory === 'FAVORITES') && favorites.length > 0">
         <div class="shelf-header">
           <h3>My Playlist</h3>
           <a routerLink="/favorites" class="see-all-link">View all ({{ favorites.length }}) <i class="bi bi-chevron-right"></i></a>
         </div>
 
-        <div class="horizontal-scroll poster-mode">
+        <div class="horizontal-scroll poster-mode" (pointerdown)="onDragStart($event)" *ngIf="favorites.length > 0">
           <div 
             class="poster-card" 
             *ngFor="let fav of favorites"

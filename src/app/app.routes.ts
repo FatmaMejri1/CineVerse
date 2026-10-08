@@ -55,6 +55,14 @@ export const routes: Routes = [
   },
 
   {
+    path: 'watchlist',
+    loadComponent: () =>
+      import('./pages/watchlist/watchlist.page').then(
+        (m) => m.WatchlistPage
+      ),
+  },
+
+  {
     path: 'matching',
     loadComponent: () =>
       import('./pages/matching/matching.page').then(

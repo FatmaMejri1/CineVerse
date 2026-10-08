@@ -2,255 +2,410 @@
 
   <div class="profile-container">
 
-    <!-- Header Navigation -->
+    <!-- ════════ TOP NAVIGATION BAR ════════ -->
     <header class="page-header">
-
-      <a routerLink="/home" class="back-button" aria-label="Go back to Home">
+      <a routerLink="/home" class="back-btn" aria-label="Back to Home">
         <i class="bi bi-arrow-left"></i>
       </a>
 
-      <div class="header-text">
-        <p class="eyebrow">CINEVERSE</p>
+      <div class="header-titles">
+        <span class="header-tag">ACCOUNT SETTINGS</span>
         <h1>My Profile</h1>
-        <p class="subtitle">
-          Manage your account details and preferences
-        </p>
       </div>
 
+      <button class="logout-icon-btn" (click)="logout()" title="Sign Out">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
     </header>
 
 
-    <!-- Loading State -->
-    <div class="loading-state" *ngIf="isLoading">
-      <div class="spinner"></div>
+    <!-- ════════ LOADING / ERROR ════════ -->
+    <div class="state-container loading" *ngIf="isLoading">
+      <div class="glow-spinner"></div>
       <p>Loading your profile...</p>
     </div>
 
-
-    <!-- Error State -->
-    <div class="error-state" *ngIf="!isLoading && errorMessage">
+    <div class="state-container error" *ngIf="!isLoading && errorMessage">
+      <i class="bi bi-exclamation-circle-fill state-icon"></i>
       <p>{{ errorMessage }}</p>
-      <button class="retry-button" (click)="loadProfile()">
-        <i class="bi bi-arrow-clockwise"></i>
-        <span>Try Again</span>
+      <button class="retry-btn" (click)="loadProfile()">
+        <i class="bi bi-arrow-clockwise"></i> Try Again
       </button>
     </div>
 
 
-    <!-- Main Profile Content -->
-    <div class="profile-body" *ngIf="!isLoading && !errorMessage">
+    <!-- ════════ MAIN BODY ════════ -->
+    <div class="profile-content" *ngIf="!isLoading && !errorMessage">
 
-      <!-- Profile Hero Card -->
-      <section class="profile-card">
+      <!-- ─── 1. HERO AVATAR SHOWCASE ─── -->
+      <section class="avatar-hero-card">
+        <div class="avatar-glow-ring">
+          <img 
+            *ngIf="userProfile?.photoUrl" 
+            [src]="userProfile!.photoUrl" 
+            alt="Profile Avatar" 
+            class="avatar-photo" />
 
-        <div class="profile-avatar-wrap" (click)="photoInput.click()">
-          <img *ngIf="userProfile?.photoUrl" [src]="userProfile!.photoUrl" alt="Profile photo"
-            class="profile-avatar-img" />
-          <div *ngIf="!userProfile?.photoUrl" class="profile-avatar-placeholder">
+          <div *ngIf="!userProfile?.photoUrl" class="avatar-fallback">
             <span *ngIf="userProfile?.firstName">{{ userProfile!.firstName[0] | uppercase }}</span>
             <i *ngIf="!userProfile?.firstName" class="bi bi-person-fill"></i>
           </div>
-          <span class="avatar-badge" title="Change photo">
+
+          <!-- Quick Camera Trigger on Avatar -->
+          <button class="camera-floating-badge" (click)="takeProfilePhoto()" title="Take photo with camera">
             <i class="bi bi-camera-fill"></i>
-          </span>
+          </button>
         </div>
 
-        <div class="profile-info">
-          <h2>{{ userProfile?.firstName }} {{ userProfile?.lastName }}</h2>
-          <p class="profile-email">{{ userProfile?.email || email }}</p>
-          <div class="profile-tags">
-            <span class="badge role-badge">
+        <div class="user-hero-details">
+          <h2 class="user-display-name">
+            {{ userProfile?.firstName }} {{ userProfile?.lastName }}
+          </h2>
+          <p class="user-display-email">{{ userProfile?.email || email }}</p>
+
+          <div class="hero-badges">
+            <span class="pill-badge role">
               <i class="bi bi-film"></i>
-              <span>{{ (userProfile?.role || 'Member') | titlecase }}</span>
+              {{ (userProfile?.role || 'Member') | titlecase }}
             </span>
-            <span class="badge active-badge" *ngIf="userProfile?.active !== false">
-              <i class="bi bi-check-circle-fill"></i>
-              <span>Active</span>
+            <span class="pill-badge active" *ngIf="userProfile?.active !== false">
+              <i class="bi bi-check-circle-fill"></i> Active
             </span>
           </div>
         </div>
 
+        <!-- Hidden Web File Input -->
+        <input 
+          #photoInput 
+          type="file" 
+          accept="image/*" 
+          (change)="onPhotoSelected($event)" 
+          style="display: none;" />
+
+        <!-- Photo Action Buttons -->
+        <div class="photo-actions-row">
+          <button class="photo-btn primary" (click)="takeProfilePhoto()" [disabled]="isTakingPhoto">
+            <i class="bi bi-camera-fill"></i>
+            <span>{{ isTakingPhoto ? 'Opening...' : 'Take Photo' }}</span>
+          </button>
+
+          <button class="photo-btn secondary" (click)="photoInput.click()" [disabled]="isTakingPhoto">
+            <i class="bi bi-image"></i>
+            <span>Upload File</span>
+          </button>
+        </div>
+
+        <!-- Photo Feedback Notification -->
+        <div class="feedback-toast success" *ngIf="photoSuccessMessage">
+          <i class="bi bi-check-circle-fill"></i>
+          <span>{{ photoSuccessMessage }}</span>
+        </div>
       </section>
 
 
-      <!-- Personal Information Section -->
-      <section class="section">
+      <!-- ─── 2. EDITABLE PERSONAL INFORMATION ─── -->
+      <section class="card-section">
+        <div class="card-section-header">
+          <div class="header-left">
+            <div class="section-icon-pill">
+              <i class="bi bi-person-gear"></i>
+            </div>
+            <div>
+              <span class="section-eyebrow">YOUR DETAILS</span>
+              <h3>Personal Information</h3>
+            </div>
+          </div>
 
-        <div class="section-title">
-          <span class="section-icon"><i class="bi bi-person-badge"></i></span>
-          <div>
-            <p class="section-label">PERSONAL INFORMATION</p>
-            <h2>Account Details</h2>
+          <button class="edit-toggle-btn" (click)="toggleEditInfo()">
+            <i class="bi" [ngClass]="isEditingInfo ? 'bi-x-lg' : 'bi-pencil-fill'"></i>
+            <span>{{ isEditingInfo ? 'Cancel' : 'Edit' }}</span>
+          </button>
+        </div>
+
+        <!-- Success/Error Feedback -->
+        <div class="feedback-toast success" *ngIf="infoSuccessMessage">
+          <i class="bi bi-check-circle-fill"></i>
+          <span>{{ infoSuccessMessage }}</span>
+        </div>
+
+        <div class="feedback-toast error" *ngIf="infoErrorMessage">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span>{{ infoErrorMessage }}</span>
+        </div>
+
+        <!-- READ-ONLY MODE -->
+        <div class="info-grid" *ngIf="!isEditingInfo">
+          <div class="info-tile">
+            <div class="tile-icon"><i class="bi bi-person"></i></div>
+            <div class="tile-data">
+              <span class="tile-label">First Name</span>
+              <strong class="tile-value">{{ userProfile?.firstName || '—' }}</strong>
+            </div>
+          </div>
+
+          <div class="info-tile">
+            <div class="tile-icon"><i class="bi bi-person"></i></div>
+            <div class="tile-data">
+              <span class="tile-label">Last Name</span>
+              <strong class="tile-value">{{ userProfile?.lastName || '—' }}</strong>
+            </div>
+          </div>
+
+          <div class="info-tile">
+            <div class="tile-icon"><i class="bi bi-calendar3"></i></div>
+            <div class="tile-data">
+              <span class="tile-label">Age</span>
+              <strong class="tile-value">{{ userProfile?.age ? (userProfile!.age + ' years old') : '—' }}</strong>
+            </div>
+          </div>
+
+          <div class="info-tile">
+            <div class="tile-icon"><i class="bi bi-envelope-at"></i></div>
+            <div class="tile-data">
+              <span class="tile-label">Email Address</span>
+              <strong class="tile-value">{{ userProfile?.email || email || '—' }}</strong>
+            </div>
           </div>
         </div>
 
-        <div class="info-list">
+        <!-- EDIT MODE FORM -->
+        <form class="edit-profile-form" *ngIf="isEditingInfo" (ngSubmit)="saveProfileInfo()">
+          <div class="form-row">
+            <div class="form-field">
+              <label for="editFirstName">First Name</label>
+              <div class="input-container">
+                <i class="bi bi-person field-icon"></i>
+                <input 
+                  id="editFirstName" 
+                  type="text" 
+                  [(ngModel)]="editFirstName" 
+                  name="editFirstName" 
+                  placeholder="e.g. John" 
+                  required />
+              </div>
+            </div>
 
-          <div class="info-item">
-            <div class="info-icon"><i class="bi bi-person"></i></div>
-            <div class="info-details">
-              <span>First Name</span>
-              <strong>{{ userProfile?.firstName || '—' }}</strong>
+            <div class="form-field">
+              <label for="editLastName">Last Name</label>
+              <div class="input-container">
+                <i class="bi bi-person field-icon"></i>
+                <input 
+                  id="editLastName" 
+                  type="text" 
+                  [(ngModel)]="editLastName" 
+                  name="editLastName" 
+                  placeholder="e.g. Doe" 
+                  required />
+              </div>
             </div>
           </div>
 
-          <div class="info-item">
-            <div class="info-icon"><i class="bi bi-person"></i></div>
-            <div class="info-details">
-              <span>Last Name</span>
-              <strong>{{ userProfile?.lastName || '—' }}</strong>
+          <div class="form-field">
+            <label for="editAge">Age</label>
+            <div class="input-container">
+              <i class="bi bi-calendar3 field-icon"></i>
+              <input 
+                id="editAge" 
+                type="number" 
+                [(ngModel)]="editAge" 
+                name="editAge" 
+                min="5" 
+                max="120" 
+                placeholder="e.g. 24" />
             </div>
           </div>
 
-          <div class="info-item">
-            <div class="info-icon"><i class="bi bi-calendar-event"></i></div>
-            <div class="info-details">
-              <span>Age</span>
-              <strong>{{ userProfile?.age ? (userProfile!.age + ' years old') : '—' }}</strong>
+          <div class="form-field disabled-field">
+            <label>Email (Account Login)</label>
+            <div class="input-container disabled">
+              <i class="bi bi-envelope-at field-icon"></i>
+              <input type="text" [value]="userProfile?.email || email" disabled />
+              <span class="locked-badge"><i class="bi bi-lock-fill"></i></span>
             </div>
+            <small class="field-hint">Email is linked to your authentication credentials.</small>
           </div>
 
-          <div class="info-item">
-            <div class="info-icon"><i class="bi bi-envelope"></i></div>
-            <div class="info-details">
-              <span>Email</span>
-              <strong>{{ userProfile?.email || email || '—' }}</strong>
-            </div>
+          <div class="form-actions-row">
+            <button type="submit" class="save-btn" [disabled]="isSavingInfo">
+              <i class="bi bi-check2" *ngIf="!isSavingInfo"></i>
+              <span>{{ isSavingInfo ? 'Saving...' : 'Save Changes' }}</span>
+            </button>
+            <button type="button" class="cancel-edit-btn" [disabled]="isSavingInfo" (click)="toggleEditInfo()">
+              Cancel
+            </button>
           </div>
-
-        </div>
-
+        </form>
       </section>
 
 
-      <!-- Security / Change Password Section -->
-      <section class="section security-section">
-
-        <div class="section-title">
-          <span class="section-icon"><i class="bi bi-shield-lock"></i></span>
-          <div>
-            <p class="section-label">SECURITY & CREDENTIALS</p>
-            <h2>Change Password</h2>
+      <!-- ─── 3. PASSWORD MODIFICATION SECTION ─── -->
+      <section class="card-section">
+        <div class="card-section-header">
+          <div class="header-left">
+            <div class="section-icon-pill security">
+              <i class="bi bi-shield-lock-fill"></i>
+            </div>
+            <div>
+              <span class="section-eyebrow">CREDENTIALS</span>
+              <h3>Password & Security</h3>
+            </div>
           </div>
         </div>
 
-        <p class="section-description">
-          Keep your CineVerse account safe by updating your password whenever needed.
+        <p class="section-intro-text">
+          Update your login password regularly to keep your movie preferences and favorites secure.
         </p>
 
         <!-- Toggle Button to Open Form if closed -->
-        <button *ngIf="!showPasswordSection" class="secondary-button" (click)="togglePasswordSection()">
+        <button 
+          *ngIf="!showPasswordSection" 
+          class="open-password-btn" 
+          (click)="togglePasswordSection()">
           <i class="bi bi-key-fill"></i>
-          <span>Change My Password</span>
+          <span>Change Password</span>
         </button>
 
         <!-- Collapsible Password Form -->
         <form *ngIf="showPasswordSection" class="password-form" (ngSubmit)="updatePassword()">
 
-          <div class="form-group">
-            <label>Current Password</label>
-            <div class="input-wrap">
-              <input [type]="showPasswordText ? 'text' : 'password'" [(ngModel)]="currentPassword"
-                name="currentPassword" placeholder="Enter current password" required />
+          <div class="form-field">
+            <label for="currPass">Current Password</label>
+            <div class="input-container">
+              <i class="bi bi-lock field-icon"></i>
+              <input 
+                id="currPass" 
+                [type]="showPasswordText ? 'text' : 'password'" 
+                [(ngModel)]="currentPassword"
+                name="currentPassword" 
+                placeholder="Enter current password" 
+                required />
             </div>
           </div>
 
-          <div class="form-group">
-            <label>New Password (min 6 characters)</label>
-            <div class="input-wrap">
-              <input [type]="showPasswordText ? 'text' : 'password'" [(ngModel)]="newPassword" name="newPassword"
-                placeholder="Enter new password" required />
+          <div class="form-field">
+            <label for="newPass">New Password (min 6 characters)</label>
+            <div class="input-container">
+              <i class="bi bi-shield-lock field-icon"></i>
+              <input 
+                id="newPass" 
+                [type]="showPasswordText ? 'text' : 'password'" 
+                [(ngModel)]="newPassword" 
+                name="newPassword"
+                placeholder="Enter new password" 
+                required />
             </div>
           </div>
 
-          <div class="form-group">
-            <label>Confirm New Password</label>
-            <div class="input-wrap">
-              <input [type]="showPasswordText ? 'text' : 'password'" [(ngModel)]="confirmPassword"
-                name="confirmPassword" placeholder="Re-enter new password" required />
+          <div class="form-field">
+            <label for="confPass">Confirm New Password</label>
+            <div class="input-container">
+              <i class="bi bi-shield-check field-icon"></i>
+              <input 
+                id="confPass" 
+                [type]="showPasswordText ? 'text' : 'password'" 
+                [(ngModel)]="confirmPassword"
+                name="confirmPassword" 
+                placeholder="Re-enter new password" 
+                required />
             </div>
           </div>
 
           <!-- Show/Hide toggle -->
           <div class="password-toggle-row">
-            <label class="checkbox-label">
+            <label class="toggle-checkbox">
               <input type="checkbox" [checked]="showPasswordText" (change)="toggleShowPasswordText()" />
-              <span>Show passwords</span>
+              <span>Show password characters</span>
             </label>
           </div>
 
           <!-- Error Alert -->
-          <div class="alert-box error" *ngIf="passwordErrorMessage">
+          <div class="feedback-toast error" *ngIf="passwordErrorMessage">
             <i class="bi bi-exclamation-triangle-fill"></i>
             <span>{{ passwordErrorMessage }}</span>
           </div>
 
           <!-- Success Alert -->
-          <div class="alert-box success" *ngIf="passwordSuccessMessage">
+          <div class="feedback-toast success" *ngIf="passwordSuccessMessage">
             <i class="bi bi-check-circle-fill"></i>
             <span>{{ passwordSuccessMessage }}</span>
           </div>
 
-          <div class="form-actions">
-            <button type="submit" class="primary-button"
+          <div class="form-actions-row">
+            <button 
+              type="submit" 
+              class="save-btn"
               [disabled]="isPasswordLoading || !currentPassword || !newPassword || !confirmPassword">
-              <i class="bi bi-check-lg" *ngIf="!isPasswordLoading"></i>
-              <span>{{ isPasswordLoading ? 'Updating Password...' : 'Save New Password' }}</span>
+              <i class="bi bi-check2" *ngIf="!isPasswordLoading"></i>
+              <span>{{ isPasswordLoading ? 'Updating...' : 'Update Password' }}</span>
             </button>
 
-            <button type="button" class="cancel-button" [disabled]="isPasswordLoading"
+            <button 
+              type="button" 
+              class="cancel-edit-btn" 
+              [disabled]="isPasswordLoading"
               (click)="togglePasswordSection()">
               Cancel
             </button>
           </div>
 
         </form>
-
       </section>
 
 
-      <!-- Profile Photo Section -->
-      <section class="section camera-section">
-
-        <div class="section-title">
-          <span class="section-icon"><i class="bi bi-camera"></i></span>
-          <div>
-            <p class="section-label">PROFILE PHOTO</p>
-            <h2>Your Picture</h2>
-          </div>
-        </div>
-
-        <p class="camera-description">
-          Add or update your profile picture by choosing an image or taking a new photo.
-        </p>
-
-        <input #photoInput type="file" accept="image/*" (change)="onPhotoSelected($event)" style="display: none;" />
-
-        <button class="camera-button" (click)="photoInput.click()">
-          <i class="bi bi-camera-fill"></i>
-          <span>Change Profile Photo</span>
-        </button>
-
-      </section>
 
 
-      <!-- Actions / Navigation Footer -->
-      <div class="action-buttons">
 
-        <a routerLink="/home" class="home-button">
-          <i class="bi bi-house-door-fill"></i>
-          <span>Back to Home</span>
-        </a>
-
-        <button class="logout-button" (click)="logout()">
+      <!-- ─── 5. SIGN OUT BUTTON ─── -->
+      <div class="logout-card">
+        <button class="logout-btn" (click)="logout()">
           <i class="bi bi-box-arrow-right"></i>
-          <span>Sign Out</span>
+          <span>Sign Out of CineVerse</span>
         </button>
-
       </div>
 
     </div>
 
+    <div class="bottom-spacer"></div>
+
   </div>
+
+
+  <!-- ════════ FIXED MOBILE BOTTOM NAV ════════ -->
+  <nav class="mobile-bottom-nav">
+    <a routerLink="/home" routerLinkActive="active" class="nav-tab" aria-label="Home">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-house-door-fill"></i>
+      </div>
+      <span>Home</span>
+    </a>
+
+    <a routerLink="/movies" routerLinkActive="active" class="nav-tab" aria-label="Movies">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-play-circle-fill"></i>
+      </div>
+      <span>Movies</span>
+    </a>
+
+    <a routerLink="/favorites" routerLinkActive="active" class="nav-tab" aria-label="Favorites">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-heart-fill"></i>
+      </div>
+      <span>Favorites</span>
+    </a>
+
+    <a routerLink="/matching" routerLinkActive="active" class="nav-tab" aria-label="Community">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <span>Community</span>
+    </a>
+
+    <a routerLink="/profile" routerLinkActive="active" class="nav-tab" aria-label="Profile">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-person-fill"></i>
+      </div>
+      <span>Profile</span>
+    </a>
+  </nav>
 
 </ion-content>

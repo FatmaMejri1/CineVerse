@@ -7,13 +7,10 @@
 
       <div class="logo">
         <div class="logo-icon"><i class="bi bi-film"></i></div>
-
-        <span>
-          Cine<span>Verse</span>
-        </span>
+        <span>Cine<span>Verse</span></span>
       </div>
 
-      <button class="back-button" routerLink="/movies">
+      <button class="back-button" routerLink="/movies" aria-label="Back to Movies">
         <i class="bi bi-arrow-left"></i>
       </button>
 
@@ -22,23 +19,17 @@
 
     <!-- LOADING -->
     <div class="loading-container" *ngIf="isLoading">
-
       <div class="spinner"></div>
-
       <p>Loading movie...</p>
-
     </div>
 
 
     <!-- ERROR -->
     <div class="error-message" *ngIf="!isLoading && errorMessage">
-
       <p>{{ errorMessage }}</p>
-
       <button routerLink="/movies">
         Back to Movies
       </button>
-
     </div>
 
 
@@ -47,9 +38,7 @@
 
       <!-- POSTER -->
       <div class="poster-container">
-
         <img [src]="imageBase + movie.poster_path" [alt]="movie.title" />
-
       </div>
 
 
@@ -66,7 +55,6 @@
 
 
         <div class="meta">
-
           <span>
             <i class="bi bi-calendar3"></i> {{ movie.release_date | date:'yyyy' }}
           </span>
@@ -75,10 +63,9 @@
             <i class="bi bi-star-fill"></i> {{ movie.vote_average | number:'1.1-1' }}
           </span>
 
-          <span>
+          <span *ngIf="movie.runtime">
             <i class="bi bi-clock"></i> {{ movie.runtime }} min
           </span>
-
         </div>
 
 
@@ -87,22 +74,78 @@
         </p>
 
 
-        <button class="favorite-button" [class.remove-favorite]="isFavorite" [disabled]="isFavoriteLoading"
-          (click)="toggleFavorite()">
-          <span *ngIf="!isFavoriteLoading">
-            <i class="bi" [ngClass]="isFavorite ? 'bi-heart-break-fill' : 'bi-heart-fill'"></i>
-            {{ isFavorite ? 'Remove from Favorites' : 'Add to Favorites' }}
-          </span>
+        <!-- ACTION BUTTONS: FAVORITE + WATCHLIST -->
+        <div class="actions-group">
+          <!-- Favorite Button -->
+          <button 
+            class="action-button favorite-button" 
+            [class.remove-favorite]="isFavorite" 
+            [disabled]="isFavoriteLoading"
+            (click)="toggleFavorite()">
+            <span *ngIf="!isFavoriteLoading">
+              <i class="bi" [ngClass]="isFavorite ? 'bi-heart-break-fill' : 'bi-heart-fill'"></i>
+              {{ isFavorite ? 'In Favorites' : 'Add to Favorites' }}
+            </span>
+            <span *ngIf="isFavoriteLoading">
+              <i class="bi bi-hourglass-split"></i> Updating...
+            </span>
+          </button>
 
-          <span *ngIf="isFavoriteLoading">
-            <i class="bi bi-hourglass-split"></i>
-            Updating...
-          </span>
-        </button>
+          <!-- Watchlist Button -->
+          <button 
+            class="action-button watchlist-button" 
+            [class.in-watchlist]="isWatchlist" 
+            [disabled]="isWatchlistLoading"
+            (click)="toggleWatchlist()">
+            <span *ngIf="!isWatchlistLoading">
+              <i class="bi" [ngClass]="isWatchlist ? 'bi-bookmark-check-fill' : 'bi-bookmark-plus'"></i>
+              {{ isWatchlist ? 'In Watchlist' : 'Watchlist' }}
+            </span>
+            <span *ngIf="isWatchlistLoading">
+              <i class="bi bi-hourglass-split"></i> Updating...
+            </span>
+          </button>
+        </div>
 
-        <p class="favorite-message" *ngIf="favoriteMessage">
-          {{ favoriteMessage }}
+        <!-- Action Messages -->
+        <p class="feedback-toast-msg" *ngIf="favoriteMessage || watchlistMessage">
+          {{ favoriteMessage || watchlistMessage }}
         </p>
+
+
+        <!-- ─── INTERACTIVE USER RATING (1-5 STARS) ─── -->
+        <div class="rating-card">
+          <div class="rating-header">
+            <span class="rating-label">
+              <i class="bi bi-star-fill star-icon"></i>
+              YOUR RATING
+            </span>
+            <button *ngIf="userRating" class="clear-rating-btn" (click)="removeRating()" title="Remove your rating">
+              Clear
+            </button>
+          </div>
+
+          <div class="stars-row">
+            <button 
+              *ngFor="let s of stars" 
+              class="star-button" 
+              [class.active]="userRating !== null && userRating >= s"
+              (click)="rateMovie(s)"
+              [title]="'Rate ' + s + ' of 5 stars'">
+              <i class="bi" [ngClass]="userRating !== null && userRating >= s ? 'bi-star-fill' : 'bi-star'"></i>
+            </button>
+            <span class="user-score-badge" *ngIf="userRating">
+              {{ userRating }} / 5
+            </span>
+          </div>
+
+          <p class="rating-status-text" *ngIf="userRating && !ratingFeedback">
+            You rated this movie {{ userRating }} out of 5 stars.
+          </p>
+          <p class="rating-status-text feedback" *ngIf="ratingFeedback">
+            {{ ratingFeedback }}
+          </p>
+        </div>
 
       </div>
 
