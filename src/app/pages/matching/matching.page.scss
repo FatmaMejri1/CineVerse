@@ -431,33 +431,27 @@
 
 /* Match Score Badge */
 .match-score-badge {
-    padding: 8px 16px;
-    text-align: center;
-    border-radius: 16px;
-
+    padding: 8px 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 20px;
     background: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(236, 72, 153, 0.15));
     border: 1px solid rgba(168, 85, 247, 0.45);
     box-shadow: 0 4px 15px rgba(124, 58, 237, 0.2);
-}
 
-.score-number {
-    display: block;
-    font-size: 24px;
-    font-weight: 800;
-    line-height: 1;
-    background: linear-gradient(90deg, #c084fc, #f472b6);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
+    i {
+        font-size: 14px;
+        color: #ec4899;
+    }
 
-.score-label {
-    display: block;
-    font-size: 10px;
-    font-weight: 800;
-    color: #a855f7;
-    letter-spacing: 1px;
-    margin-top: 2px;
+    .score-label {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.8px;
+        color: #e9d5ff;
+        margin: 0;
+    }
 }
 
 /* ==============================================

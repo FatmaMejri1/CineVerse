@@ -11,66 +11,41 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    function isAdmin() {
-      return isAuthenticated() &&
-        (request.auth.token.admin == true ||
-         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
-    }
-
     // ════════ USERS COLLECTION ════════
     match /users/{userId} {
-      // Any authenticated user can read public user data; owner can update profile
       allow read: if isAuthenticated();
-      allow create, update: if isOwner(userId) || isAdmin();
-      allow delete: if isAdmin();
+      allow write: if isOwner(userId);
 
-      // ── Subcollection: Favorites ──
-      match /favorites/{favoriteId} {
-        allow read: if isAuthenticated();
-        allow write: if isOwner(userId);
-      }
-
-      // ── Subcollection: Watchlist ──
-      match /watchlist/{watchlistId} {
-        allow read: if isOwner(userId);
-        allow write: if isOwner(userId);
-      }
-
-      // ── Subcollection: Ratings ──
-      match /ratings/{ratingId} {
-        allow read: if isAuthenticated();
-        allow write: if isOwner(userId);
+      // Subcollections: favorites, watchlist, ratings
+      match /{subcollection=**} {
+        allow read, write: if isOwner(userId);
       }
     }
 
     // ════════ PUBLIC PROFILES & COMMENTS ════════
     match /publicProfiles/{userId} {
-      // Public profiles are readable by all authenticated members for matching
       allow read: if isAuthenticated();
-      allow write: if isOwner(userId) || isAdmin();
+      allow write: if isAuthenticated();
 
-      // ── Subcollection: Comments & Discussions ──
+      // Subcollection: comments
       match /comments/{commentId} {
         allow read: if isAuthenticated();
-        // An authenticated member can post comments (authorUid must match requester)
-        allow create: if isAuthenticated() &&
-          request.resource.data.authorUid == request.auth.uid &&
-          request.resource.data.text is string &&
-          request.resource.data.text.size() <= 500;
-        // Comment author or profile owner can delete comments
+        allow create: if isAuthenticated();
         allow delete: if isAuthenticated() &&
-          (resource.data.authorUid == request.auth.uid || isOwner(userId) || isAdmin());
-        // Comments cannot be edited by third parties
+          (resource.data.authorUid == request.auth.uid || request.auth.uid == userId);
         allow update: if isAuthenticated() &&
           resource.data.authorUid == request.auth.uid;
       }
+
+      match /{subcollection=**} {
+        allow read, write: if isAuthenticated();
+      }
     }
 
-    // ════════ MOVIES (Admin / Catalog) ════════
+    // ════════ MOVIES ════════
     match /movies/{movieId} {
       allow read: if isAuthenticated();
-      allow write: if isAdmin();
+      allow write: if isAuthenticated();
     }
   }
 }
