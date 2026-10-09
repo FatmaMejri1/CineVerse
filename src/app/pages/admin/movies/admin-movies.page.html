@@ -255,35 +255,23 @@
             </div>
           </div>
 
-          <!-- Poster Option: URL or File Upload -->
+          <!-- Poster Image URL -->
           <div class="form-group">
-            <label>Poster Image <span class="required">*</span></label>
-            <div class="poster-input-grid">
-              <div class="poster-url-input">
-                <label class="sub-label">Image URL</label>
-                <input
-                  type="url"
-                  [(ngModel)]="formPosterUrl"
-                  name="posterUrl"
-                  placeholder="https://image.tmdb.org/t/p/w500/... or image URL"
-                  class="form-control" />
-              </div>
-
-              <div class="poster-file-input">
-                <label class="sub-label">Or Upload File to Firebase Storage</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  (change)="onPosterFileSelected($event)"
-                  class="file-input" />
-              </div>
-            </div>
+            <label for="moviePosterUrl">Poster Image URL <span class="required">*</span></label>
+            <input
+              id="moviePosterUrl"
+              type="url"
+              [(ngModel)]="formPosterUrl"
+              name="posterUrl"
+              placeholder="e.g. https://image.tmdb.org/... or image URL"
+              required
+              class="form-control" />
 
             <!-- Poster Preview -->
-            <div class="poster-preview-box" *ngIf="posterPreviewUrl || formPosterUrl">
+            <div class="poster-preview-box" *ngIf="formPosterUrl">
               <span class="preview-label">Poster Preview:</span>
               <img
-                [src]="posterPreviewUrl || formPosterUrl"
+                [src]="formPosterUrl"
                 alt="Poster preview"
                 class="poster-preview-img"
                 (error)="$any($event.target).style.display = 'none'" />

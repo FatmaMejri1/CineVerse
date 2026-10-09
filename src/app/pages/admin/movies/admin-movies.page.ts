@@ -233,8 +233,8 @@ export class AdminMoviesPage implements OnInit {
       return;
     }
 
-    if (!cleanPosterUrl && !this.selectedPosterFile && !this.isEditing) {
-      this.formError = 'Please provide a poster image URL or upload a poster file.';
+    if (!cleanPosterUrl && !this.isEditing) {
+      this.formError = 'Please provide a poster image URL.';
       return;
     }
 
