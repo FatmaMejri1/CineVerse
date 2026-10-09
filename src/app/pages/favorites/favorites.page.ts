@@ -21,7 +21,6 @@ import { environment } from '../../../environments/environment';
 export class FavoritesPage implements OnInit {
 
   favorites: any[] = [];
-
   imageBase = environment.tmdb.imageBase;
 
   isLoading = true;
@@ -34,8 +33,30 @@ export class FavoritesPage implements OnInit {
     private cdr: ChangeDetectorRef
   ) { }
 
+  private isLoaded = false;
+
   async ngOnInit(): Promise<void> {
-    await this.loadFavorites();
+    if (!this.isLoaded) {
+      this.isLoaded = true;
+      await this.loadFavorites();
+    }
+  }
+
+  async ionViewWillEnter(): Promise<void> {
+    if (!this.isLoaded || this.favorites.length === 0) {
+      this.isLoaded = true;
+      await this.loadFavorites();
+    } else {
+      this.cdr.detectChanges();
+    }
+  }
+
+  getPosterUrl(path: string | undefined): string {
+    if (!path) return '';
+    if (path.startsWith('http') || path.startsWith('data:') || path.startsWith('assets/')) {
+      return path;
+    }
+    return this.imageBase + path;
   }
 
   async loadFavorites(): Promise<void> {
@@ -46,22 +67,15 @@ export class FavoritesPage implements OnInit {
     try {
       const user = await this.authService.waitForAuth();
 
-      console.log('Current Firebase user in FavoritesPage:', user);
-
       if (!user) {
         this.errorMessage = 'Please sign in to view your favorites.';
         return;
       }
 
       this.favorites = await this.favoritesService.getFavorites();
-
-      console.log('Favorites loaded:', this.favorites);
     } catch (error: any) {
       console.error('Error loading favorites:', error);
-
-      this.errorMessage =
-        error?.message ||
-        'Unable to load your favorites.';
+      this.errorMessage = error?.message || 'Unable to load your favorites.';
     } finally {
       this.isLoading = false;
       this.cdr.detectChanges();
@@ -77,29 +91,10 @@ export class FavoritesPage implements OnInit {
     this.cdr.detectChanges();
 
     try {
-      await this.favoritesService.removeFavorite(
-        favorite.movieId
-      );
-
-      this.favorites =
-        this.favorites.filter(
-          item => item.movieKey !== favorite.movieKey
-        );
-
-      console.log(
-        'Favorite removed:',
-        favorite.movieKey
-      );
+      await this.favoritesService.removeFavorite(favorite.movieId);
+      this.favorites = this.favorites.filter(item => item.movieKey !== favorite.movieKey);
     } catch (error: any) {
-      console.error(
-        'Error removing favorite:',
-        error
-      );
-
-      alert(
-        error?.message ||
-        'Unable to remove this movie from favorites.'
-      );
+      console.error('Error removing favorite:', error);
     } finally {
       this.removingId = null;
       this.cdr.detectChanges();

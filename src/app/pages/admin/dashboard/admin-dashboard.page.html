@@ -1,0 +1,229 @@
+<ion-content [fullscreen]="true" class="admin-content">
+
+  <div class="admin-layout">
+
+    <!-- ════════ TOP ADMIN NAV BAR ════════ -->
+    <header class="admin-topbar">
+      <div class="topbar-brand">
+        <div class="brand-badge">
+          <i class="bi bi-shield-lock-fill"></i>
+        </div>
+        <div class="brand-text">
+          <h1>Cine<span>Verse</span></h1>
+          <span class="panel-tag">ADMIN CONSOLE</span>
+        </div>
+      </div>
+
+      <nav class="admin-nav-links">
+        <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
+          <i class="bi bi-speedometer2"></i>
+          <span>Dashboard</span>
+        </a>
+        <a routerLink="/admin/movies" routerLinkActive="active" class="nav-item">
+          <i class="bi bi-film"></i>
+          <span>Movies</span>
+        </a>
+        <a routerLink="/admin/users" routerLinkActive="active" class="nav-item">
+          <i class="bi bi-people-fill"></i>
+          <span>Users</span>
+        </a>
+      </nav>
+
+      <div class="topbar-user">
+        <div class="admin-info" *ngIf="adminProfile">
+          <span class="admin-name">{{ adminProfile.firstName }} {{ adminProfile.lastName }}</span>
+          <span class="admin-role-badge">Super Admin</span>
+        </div>
+        <a routerLink="/home" class="btn-return" title="Return to CineVerse catalog">
+          <i class="bi bi-box-arrow-up-right"></i>
+          <span>App</span>
+        </a>
+        <button (click)="logout()" class="btn-logout" title="Log out">
+          <i class="bi bi-power"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- ════════ MAIN CONTENT AREA ════════ -->
+    <main class="dashboard-body">
+
+      <!-- Loading State -->
+      <div class="loading-state" *ngIf="isLoading">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p>Loading Firestore metrics...</p>
+      </div>
+
+      <!-- Error State -->
+      <div class="error-banner" *ngIf="errorMessage && !isLoading">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>{{ errorMessage }}</span>
+        <button (click)="loadDashboardData()" class="retry-btn">Retry</button>
+      </div>
+
+      <!-- Dashboard Grid -->
+      <div class="dashboard-container" *ngIf="!isLoading">
+
+        <!-- Welcome Banner -->
+        <section class="welcome-card">
+          <div class="welcome-content">
+            <span class="greeting-tag"><i class="bi bi-stars"></i> System Overview</span>
+            <h2>Welcome to CineVerse Management</h2>
+            <p>Monitor your movie platform in real-time. Manage shared catalog movies and enforce user security according to coursework requirements.</p>
+            <div class="quick-actions-row">
+              <a routerLink="/admin/movies" class="cta-btn primary">
+                <i class="bi bi-plus-circle-fill"></i>
+                <span>Add New Movie</span>
+              </a>
+              <a routerLink="/admin/users" class="cta-btn secondary">
+                <i class="bi bi-person-x-fill"></i>
+                <span>Manage Users & Status</span>
+              </a>
+              <button (click)="loadDashboardData()" class="cta-btn ghost">
+                <i class="bi bi-arrow-clockwise"></i>
+                <span>Refresh</span>
+              </button>
+            </div>
+          </div>
+          <div class="welcome-deco">
+            <i class="bi bi-camera-reels-fill"></i>
+          </div>
+        </section>
+
+        <!-- Metric Stat Cards -->
+        <section class="stats-grid">
+
+          <div class="stat-card">
+            <div class="stat-icon-wrap users-icon">
+              <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Total Users</span>
+              <strong class="stat-value">{{ stats.totalUsers }}</strong>
+              <span class="stat-sub">Registered accounts in Firestore</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-wrap active-icon">
+              <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Active Users</span>
+              <strong class="stat-value text-success">{{ stats.activeUsers }}</strong>
+              <span class="stat-sub">Full access to catalog & community</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-wrap deactivated-icon">
+              <i class="bi bi-slash-circle-fill"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Deactivated Users</span>
+              <strong class="stat-value text-danger">{{ stats.deactivatedUsers }}</strong>
+              <span class="stat-sub">Preserved accounts with restricted access</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-wrap movies-icon">
+              <i class="bi bi-film"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Custom Catalog Movies</span>
+              <strong class="stat-value text-accent">{{ stats.totalMovies }}</strong>
+              <span class="stat-sub">Admin-added movies in Firestore</span>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- Two Column Overview: Quick Tables -->
+        <div class="overview-columns">
+
+          <!-- Recent Custom Movies -->
+          <section class="overview-panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                <i class="bi bi-film"></i>
+                <h3>Recently Added Movies</h3>
+              </div>
+              <a routerLink="/admin/movies" class="panel-link">View all <i class="bi bi-chevron-right"></i></a>
+            </div>
+
+            <div class="empty-list" *ngIf="recentMovies.length === 0">
+              <i class="bi bi-film"></i>
+              <p>No custom movies added to Firestore yet.</p>
+              <a routerLink="/admin/movies" class="btn-sm-primary">Add First Movie</a>
+            </div>
+
+            <div class="mini-movie-list" *ngIf="recentMovies.length > 0">
+              <div class="mini-movie-card" *ngFor="let movie of recentMovies">
+                <img [src]="movie.posterPath || 'assets/placeholder-movie.jpg'" [alt]="movie.title" class="mini-poster" (error)="$any($event.target).src = 'https://via.placeholder.com/60x90?text=Movie'" />
+                <div class="mini-details">
+                  <h4>{{ movie.title }}</h4>
+                  <div class="mini-meta">
+                    <span class="year">{{ movie.releaseDate }}</span>
+                    <span class="dot">•</span>
+                    <span class="genres" *ngIf="movie.genres.length">{{ movie.genres.slice(0, 2).join(', ') }}</span>
+                    <span class="dot">•</span>
+                    <span class="score"><i class="bi bi-star-fill"></i> {{ movie.voteAverage | number:'1.1-1' }}</span>
+                  </div>
+                </div>
+                <a [routerLink]="['/movie-details', movie.id]" class="view-pill" title="View in catalog">
+                  <i class="bi bi-eye"></i>
+                </a>
+              </div>
+            </div>
+          </section>
+
+          <!-- Recent Users -->
+          <section class="overview-panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                <i class="bi bi-people"></i>
+                <h3>Registered Members</h3>
+              </div>
+              <a routerLink="/admin/users" class="panel-link">Manage all <i class="bi bi-chevron-right"></i></a>
+            </div>
+
+            <div class="empty-list" *ngIf="recentUsers.length === 0">
+              <i class="bi bi-person-slash"></i>
+              <p>No users found in Firestore.</p>
+            </div>
+
+            <div class="mini-user-list" *ngIf="recentUsers.length > 0">
+              <div class="mini-user-row" *ngFor="let user of recentUsers">
+                <div class="user-avatar-wrap">
+                  <img *ngIf="user.photoUrl" [src]="user.photoUrl" [alt]="user.firstName" class="avatar-img" />
+                  <div *ngIf="!user.photoUrl" class="avatar-fallback">
+                    {{ user.firstName.charAt(0) || 'U' }}{{ user.lastName.charAt(0) || '' }}
+                  </div>
+                </div>
+
+                <div class="user-info">
+                  <h4>{{ user.firstName }} {{ user.lastName }}</h4>
+                  <span class="user-email">{{ user.email }}</span>
+                </div>
+
+                <div class="user-badges">
+                  <span class="role-badge" [class.admin]="user.role === 'admin'">
+                    {{ user.role === 'admin' ? 'Admin' : 'User' }}
+                  </span>
+                  <span class="status-badge" [class.active]="user.active !== false" [class.deactivated]="user.active === false">
+                    {{ user.active !== false ? 'Active' : 'Deactivated' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+</ion-content>

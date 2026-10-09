@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
+    // ════════ HELPER FUNCTIONS ════════
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -11,41 +11,91 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    function getUserData(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data;
+    }
+
+    // Account is considered active if doc exists and active is not explicitly false
+    function isActive() {
+      return isAuthenticated() && 
+        (!exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+         getUserData(request.auth.uid).active != false);
+    }
+
+    // Admin role check directly from Firestore user profile
+    function isAdmin() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        getUserData(request.auth.uid).role == 'admin' &&
+        getUserData(request.auth.uid).active != false;
+    }
+
     // ════════ USERS COLLECTION ════════
     match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow write: if isOwner(userId);
+      // Authenticated active users or admins can read user profiles
+      allow read: if isAuthenticated() && (isActive() || isAdmin());
+
+      // Create: User can create their initial profile as a standard active user
+      allow create: if isOwner(userId) &&
+        request.resource.data.role == 'user' &&
+        request.resource.data.active == true;
+
+      // Update:
+      // 1. Admin can update any profile (e.g. toggle active, role)
+      // 2. Regular active user can update their own profile, but CANNOT modify role or active fields
+      allow update: if (isAdmin()) ||
+        (isOwner(userId) && isActive() &&
+         request.resource.data.role == resource.data.role &&
+         request.resource.data.active == resource.data.active);
+
+      // Deleting user documents is strictly disabled per coursework policy (preserves all data)
+      allow delete: if false;
 
       // Subcollections: favorites, watchlist, ratings
       match /{subcollection=**} {
-        allow read, write: if isOwner(userId);
+        allow read: if (isOwner(userId) && isActive()) || isAdmin();
+        allow write: if isOwner(userId) && isActive();
+        allow delete: if isOwner(userId) && isActive();
       }
     }
 
     // ════════ PUBLIC PROFILES & COMMENTS ════════
     match /publicProfiles/{userId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow read: if isAuthenticated() && isActive();
+
+      // Create / Update public profile:
+      // 1. Admin can update any public profile
+      // 2. Owner can update their public profile
+      allow create: if isOwner(userId) && isActive();
+      allow update: if isAdmin() ||
+        (isOwner(userId) && isActive() &&
+         (!('active' in resource.data) || request.resource.data.active == resource.data.active));
 
       // Subcollection: comments
       match /comments/{commentId} {
-        allow read: if isAuthenticated();
-        allow create: if isAuthenticated();
-        allow delete: if isAuthenticated() &&
-          (resource.data.authorUid == request.auth.uid || request.auth.uid == userId);
-        allow update: if isAuthenticated() &&
+        allow read: if isAuthenticated() && isActive();
+        allow create: if isAuthenticated() && isActive();
+        allow delete: if (isAuthenticated() && isActive() &&
+          (resource.data.authorUid == request.auth.uid || request.auth.uid == userId)) || isAdmin();
+        allow update: if isAuthenticated() && isActive() &&
           resource.data.authorUid == request.auth.uid;
       }
 
       match /{subcollection=**} {
-        allow read, write: if isAuthenticated();
+        allow read, write: if (isAuthenticated() && isActive()) || isAdmin();
       }
     }
 
-    // ════════ MOVIES ════════
+    // ════════ MOVIES COLLECTION ════════
     match /movies/{movieId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      // Public / Active users can browse the movie catalog
+      allow read: if isAuthenticated() && isActive();
+
+      // ONLY authorized active administrators can add or edit catalog movies
+      allow create, update: if isAdmin();
+
+      // Deletion is restricted
+      allow delete: if isAdmin();
     }
   }
 }

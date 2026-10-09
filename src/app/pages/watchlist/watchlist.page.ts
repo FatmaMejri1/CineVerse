@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { IonContent } from '@ionic/angular';
 
 import { WatchlistService } from '../../core/services/watchlist.service';
@@ -16,6 +16,7 @@ import { environment } from '../../../environments/environment';
   imports: [
     CommonModule,
     RouterLink,
+    RouterLinkActive,
     IonContent
   ]
 })
@@ -34,12 +35,30 @@ export class WatchlistPage implements OnInit {
     private cdr: ChangeDetectorRef
   ) { }
 
+  getPosterUrl(path: string | undefined): string {
+    if (!path) return 'https://via.placeholder.com/300x450?text=No+Poster';
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:') || path.startsWith('assets/')) {
+      return path;
+    }
+    return this.imageBase + (path.startsWith('/') ? path : '/' + path);
+  }
+
+  private isLoaded = false;
+
   async ngOnInit(): Promise<void> {
-    await this.loadWatchlist();
+    if (!this.isLoaded) {
+      this.isLoaded = true;
+      await this.loadWatchlist();
+    }
   }
 
   async ionViewWillEnter(): Promise<void> {
-    await this.loadWatchlist();
+    if (!this.isLoaded || this.watchlist.length === 0) {
+      this.isLoaded = true;
+      await this.loadWatchlist();
+    } else {
+      this.cdr.detectChanges();
+    }
   }
 
   async loadWatchlist(): Promise<void> {

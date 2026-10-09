@@ -8,6 +8,7 @@ import { FavoritesService } from '../../core/services/favorites';
 import { WatchlistService } from '../../core/services/watchlist.service';
 import { RatingsService } from '../../core/services/ratings.service';
 import { AuthService } from '../../core/services/auth.service';
+import { MovieService } from '../../core/services/movie.service';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -48,6 +49,7 @@ export class MovieDetailsPage implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private tmdbService: TmdbService,
+    private movieService: MovieService,
     private favoritesService: FavoritesService,
     private watchlistService: WatchlistService,
     private ratingsService: RatingsService,
@@ -67,19 +69,54 @@ export class MovieDetailsPage implements OnInit {
     await this.loadMovie(movieId);
   }
 
+  getPosterUrl(): string {
+    if (!this.movie) return '';
+    const path = this.movie.poster_path || this.movie.posterPath || '';
+    if (path.startsWith('http') || path.startsWith('data:') || path.startsWith('assets/')) {
+      return path;
+    }
+    return this.imageBase + path;
+  }
+
   async loadMovie(movieId: string): Promise<void> {
     this.isLoading = true;
     this.errorMessage = '';
 
     try {
-      const data = await this.tmdbService.getMovieDetails(movieId);
-      this.movie = data;
+      // 1. Try checking Firestore first for custom admin-added movie
+      let customMovie = null;
+      try {
+        customMovie = await this.movieService.getMovieById(movieId);
+      } catch (fsErr) {
+        console.warn('Firestore lookup error:', fsErr);
+      }
+
+      if (customMovie) {
+        this.movie = {
+          id: customMovie.numericId || customMovie.id,
+          firestoreDocId: customMovie.id,
+          title: customMovie.title,
+          overview: customMovie.overview,
+          poster_path: customMovie.posterPath,
+          backdrop_path: customMovie.posterPath || customMovie.backdropPath,
+          release_date: customMovie.releaseDate,
+          vote_average: customMovie.voteAverage,
+          vote_count: customMovie.voteCount || 1,
+          genres: customMovie.genres?.map((g: string, i: number) => ({ id: i + 1, name: g })) || [],
+          isCustom: true
+        };
+      } else {
+        // 2. Fetch from TMDB
+        const data = await this.tmdbService.getMovieDetails(movieId);
+        this.movie = data;
+      }
 
       // Check current user status for this movie
+      const effectiveId = this.movie?.id ? String(this.movie.id) : movieId;
       await Promise.all([
-        this.checkFavorite(movieId),
-        this.checkWatchlist(movieId),
-        this.checkRating(movieId)
+        this.checkFavorite(effectiveId),
+        this.checkWatchlist(effectiveId),
+        this.checkRating(effectiveId)
       ]);
 
     } catch (error) {

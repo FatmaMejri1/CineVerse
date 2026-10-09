@@ -1,0 +1,317 @@
+<ion-content [fullscreen]="true" class="admin-content">
+
+  <div class="admin-layout">
+
+    <!-- ════════ TOP ADMIN NAV BAR ════════ -->
+    <header class="admin-topbar">
+      <div class="topbar-brand">
+        <div class="brand-badge">
+          <i class="bi bi-people-fill"></i>
+        </div>
+        <div class="brand-text">
+          <h1>Cine<span>Verse</span></h1>
+          <span class="panel-tag">USER ACCESS & STATUS CONTROL</span>
+        </div>
+      </div>
+
+      <nav class="admin-nav-links">
+        <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
+          <i class="bi bi-speedometer2"></i>
+          <span>Dashboard</span>
+        </a>
+        <a routerLink="/admin/movies" routerLinkActive="active" class="nav-item">
+          <i class="bi bi-film"></i>
+          <span>Movies</span>
+        </a>
+        <a routerLink="/admin/users" routerLinkActive="active" class="nav-item">
+          <i class="bi bi-people-fill"></i>
+          <span>Users</span>
+        </a>
+      </nav>
+
+      <div class="topbar-user">
+        <a routerLink="/home" class="btn-return" title="Return to CineVerse catalog">
+          <i class="bi bi-box-arrow-up-right"></i>
+          <span>App</span>
+        </a>
+        <button (click)="logout()" class="btn-logout" title="Log out">
+          <i class="bi bi-power"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- ════════ BODY ════════ -->
+    <main class="dashboard-body">
+
+      <!-- Coursework Requirement Callout -->
+      <div class="compliance-callout">
+        <div class="callout-icon">
+          <i class="bi bi-shield-check"></i>
+        </div>
+        <div class="callout-text">
+          <strong>Mandatory Coursework Policy Enforced:</strong>
+          <span>Deactivating a user revokes application access while strictly preserving their account, Firestore document, UID, favorites, watchlists, ratings, and comments. No data is deleted.</span>
+        </div>
+      </div>
+
+      <!-- Success Notification Banner -->
+      <div class="success-banner" *ngIf="successFeedback">
+        <i class="bi bi-check-circle-fill"></i>
+        <span>{{ successFeedback }}</span>
+      </div>
+
+      <!-- Error Banner -->
+      <div class="error-banner" *ngIf="errorMessage && !isLoading">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>{{ errorMessage }}</span>
+        <button (click)="loadUsers()" class="retry-btn">Retry</button>
+      </div>
+
+      <!-- Action & Filter Bar -->
+      <div class="catalog-toolbar">
+        <div class="toolbar-search">
+          <i class="bi bi-search search-icon"></i>
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (input)="onSearchChange()"
+            placeholder="Search users by name, surname, or email..."
+            class="search-input" />
+          <button *ngIf="searchTerm" (click)="searchTerm = ''; applyFilters()" class="clear-btn">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
+
+        <div class="filter-group">
+          <!-- Status Filter -->
+          <div class="btn-group-pill">
+            <button
+              class="pill-btn"
+              [class.active]="statusFilter === 'ALL'"
+              (click)="setStatusFilter('ALL')">
+              All ({{ users.length }})
+            </button>
+            <button
+              class="pill-btn"
+              [class.active]="statusFilter === 'ACTIVE'"
+              (click)="setStatusFilter('ACTIVE')">
+              Active
+            </button>
+            <button
+              class="pill-btn danger"
+              [class.active]="statusFilter === 'DEACTIVATED'"
+              (click)="setStatusFilter('DEACTIVATED')">
+              Deactivated
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading-state" *ngIf="isLoading">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p>Loading registered members from Firestore...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-catalog-state" *ngIf="!isLoading && filteredUsers.length === 0">
+        <div class="empty-icon-circle">
+          <i class="bi bi-person-slash"></i>
+        </div>
+        <h3>No Users Found</h3>
+        <p>No registered users match your search or filter criteria.</p>
+      </div>
+
+      <!-- Users Table / Cards Container -->
+      <div class="users-table-container" *ngIf="!isLoading && filteredUsers.length > 0">
+
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Email</th>
+              <th>Age</th>
+              <th>Role</th>
+              <th>Account Status</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of filteredUsers" [class.is-deactivated]="user.active === false">
+
+              <!-- Member info with avatar -->
+              <td>
+                <div class="member-cell">
+                  <div class="avatar-circle">
+                    <img *ngIf="user.photoUrl" [src]="user.photoUrl" [alt]="user.firstName" class="avatar-img" />
+                    <span *ngIf="!user.photoUrl" class="avatar-initials">
+                      {{ user.firstName.charAt(0) || 'U' }}{{ user.lastName.charAt(0) || '' }}
+                    </span>
+                  </div>
+                  <div class="member-names">
+                    <span class="full-name">{{ user.firstName }} {{ user.lastName }}</span>
+                    <span class="user-uid-snippet" [title]="user.uid">UID: {{ user.uid | slice:0:8 }}...</span>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Email -->
+              <td>
+                <span class="email-text">{{ user.email }}</span>
+              </td>
+
+              <!-- Age -->
+              <td>
+                <span class="age-text">{{ user.age || '—' }} yrs</span>
+              </td>
+
+              <!-- Role -->
+              <td>
+                <span class="role-pill" [class.admin]="user.role === 'admin'">
+                  <i class="bi" [ngClass]="user.role === 'admin' ? 'bi-shield-check' : 'bi-person'"></i>
+                  {{ user.role === 'admin' ? 'Administrator' : 'Member' }}
+                </span>
+              </td>
+
+              <!-- Status -->
+              <td>
+                <span class="status-pill" [class.active]="user.active !== false" [class.deactivated]="user.active === false">
+                  <i class="bi" [ngClass]="user.active !== false ? 'bi-check-circle-fill' : 'bi-slash-circle-fill'"></i>
+                  {{ user.active !== false ? 'Active' : 'Deactivated' }}
+                </span>
+              </td>
+
+              <!-- Action button: Deactivate or Reactivate -->
+              <td class="text-right">
+                <!-- Self Protection: Current Admin cannot deactivate themselves -->
+                <span *ngIf="user.uid === currentAdminUid" class="self-badge" title="Your current session">
+                  <i class="bi bi-person-check-fill"></i> Current Admin
+                </span>
+
+                <!-- Action for active non-self user -->
+                <button
+                  *ngIf="user.uid !== currentAdminUid && user.active !== false"
+                  (click)="openDeactivateConfirm(user)"
+                  class="action-btn deactivate"
+                  [disabled]="user.role === 'admin'"
+                  [title]="user.role === 'admin' ? 'Cannot deactivate administrator' : 'Deactivate account without deleting data'">
+                  <i class="bi bi-person-x-fill"></i>
+                  <span>Deactivate</span>
+                </button>
+
+                <!-- Action for deactivated user -->
+                <button
+                  *ngIf="user.uid !== currentAdminUid && user.active === false"
+                  (click)="openReactivateConfirm(user)"
+                  class="action-btn reactivate"
+                  title="Reactivate account and restore access">
+                  <i class="bi bi-arrow-counterclockwise"></i>
+                  <span>Reactivate</span>
+                </button>
+              </td>
+
+            </tr>
+          </tbody>
+        </table>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- ════════ CONFIRMATION MODAL ════════ -->
+  <div class="modal-backdrop" *ngIf="showConfirmModal" (click)="closeConfirmModal()">
+    <div class="modal-container confirm-modal" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div class="modal-title-group" [class.danger]="confirmActionType === 'deactivate'">
+          <i class="bi" [ngClass]="confirmActionType === 'deactivate' ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill'"></i>
+          <h2>{{ confirmActionType === 'deactivate' ? 'Confirm Account Deactivation' : 'Confirm Account Reactivation' }}</h2>
+        </div>
+        <button (click)="closeConfirmModal()" class="btn-close-modal" aria-label="Close modal">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="modal-body" *ngIf="selectedUser">
+
+        <!-- Error if any -->
+        <div class="modal-error-alert" *ngIf="actionError">
+          <i class="bi bi-exclamation-octagon-fill"></i>
+          <span>{{ actionError }}</span>
+        </div>
+
+        <!-- Deactivate Confirmation Details -->
+        <div class="confirm-content" *ngIf="confirmActionType === 'deactivate'">
+          <p class="confirm-message">
+            Are you sure you want to <strong>deactivate</strong> the account for:
+          </p>
+
+          <div class="user-highlight-card">
+            <div class="highlight-avatar">
+              {{ selectedUser.firstName.charAt(0) }}{{ selectedUser.lastName.charAt(0) }}
+            </div>
+            <div class="highlight-info">
+              <strong>{{ selectedUser.firstName }} {{ selectedUser.lastName }}</strong>
+              <span>{{ selectedUser.email }}</span>
+              <small>UID: {{ selectedUser.uid }}</small>
+            </div>
+          </div>
+
+          <div class="guarantee-box">
+            <h4><i class="bi bi-shield-check"></i> Safe Deactivation Guarantees:</h4>
+            <ul>
+              <li><strong>Zero Data Loss:</strong> User document, profile, and Auth account remain intact.</li>
+              <li><strong>User Content Preserved:</strong> Favorites, ratings, watchlist, and comments will NOT be deleted.</li>
+              <li><strong>Restricted Access:</strong> The user will be safely logged out and blocked from logging in until reactivated.</li>
+              <li><strong>Reversible:</strong> You can reactivate this user at any time with one click.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Reactivate Confirmation Details -->
+        <div class="confirm-content" *ngIf="confirmActionType === 'reactivate'">
+          <p class="confirm-message">
+            Reactivate account access for <strong>{{ selectedUser.firstName }} {{ selectedUser.lastName }}</strong>?
+          </p>
+
+          <div class="user-highlight-card">
+            <div class="highlight-avatar success">
+              {{ selectedUser.firstName.charAt(0) }}{{ selectedUser.lastName.charAt(0) }}
+            </div>
+            <div class="highlight-info">
+              <strong>{{ selectedUser.firstName }} {{ selectedUser.lastName }}</strong>
+              <span>{{ selectedUser.email }}</span>
+            </div>
+          </div>
+
+          <p class="reactivate-note">
+            The user will immediately regain full access to log in, view the movie catalog, and interact with the community. All their previously saved data is already preserved.
+          </p>
+        </div>
+
+        <!-- Modal Actions -->
+        <div class="modal-footer">
+          <button type="button" (click)="closeConfirmModal()" class="btn-cancel" [disabled]="isProcessingAction">
+            Cancel
+          </button>
+          <button
+            type="button"
+            (click)="executeConfirmedAction()"
+            class="btn-action-confirm"
+            [class.danger]="confirmActionType === 'deactivate'"
+            [class.success]="confirmActionType === 'reactivate'"
+            [disabled]="isProcessingAction">
+            <ion-spinner name="crescent" *ngIf="isProcessingAction"></ion-spinner>
+            <i class="bi" [ngClass]="confirmActionType === 'deactivate' ? 'bi-person-x-fill' : 'bi-check-lg'" *ngIf="!isProcessingAction"></i>
+            <span>{{ isProcessingAction ? 'Applying...' : (confirmActionType === 'deactivate' ? 'Yes, Deactivate Account' : 'Yes, Reactivate Account') }}</span>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+</ion-content>

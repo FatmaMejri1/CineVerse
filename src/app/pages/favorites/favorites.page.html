@@ -1,93 +1,131 @@
-<ion-content class="favorites-page">
+<ion-content [fullscreen]="true" class="favorites-content">
 
-  <div class="favorites-container">
+  <div class="page-container">
 
-    <div class="page-header">
-      <a routerLink="/home" class="back-button">
+    <!-- ════════ PAGE HEADER ════════ -->
+    <header class="page-header">
+
+      <a routerLink="/home" class="back-btn" aria-label="Back to Home">
         <i class="bi bi-arrow-left"></i>
       </a>
 
-      <div>
-        <p class="eyebrow">YOUR COLLECTION</p>
-        <h1>My Favorites <i class="bi bi-heart-fill title-heart"></i></h1>
-        <p class="subtitle">
-          Your personal movie playlist
+      <div class="header-titles">
+        <span class="eyebrow">CINEVERSE COLLECTION</span>
+        <h1>My Favorites</h1>
+        <p class="subtitle">Your handpicked cinema gems and personal playlist</p>
+      </div>
+
+    </header>
+
+    <!-- ════════ HERO BANNER ════════ -->
+    <section class="hero-banner" *ngIf="!isLoading && !errorMessage">
+
+      <div class="hero-content">
+        <div class="hero-pill">
+          <i class="bi bi-heart-fill"></i>
+          <span>Personal Library</span>
+        </div>
+
+        <h2>Curated By You</h2>
+        <p>
+          Movies saved to your favorites shape your personalized recommendations and match you with fellow cinema soulmates in the community.
         </p>
       </div>
+
+    </section>
+
+    <!-- ════════ STATE 1: LOADING ════════ -->
+    <div class="state-card loading-state" *ngIf="isLoading">
+      <div class="spinner-glow"></div>
+      <h2>Loading your favorites...</h2>
+      <p>Retrieving your saved playlist from Firestore</p>
     </div>
 
-    <div class="loading-state" *ngIf="isLoading">
-      <div class="spinner"></div>
-      <p>Loading your favorites...</p>
-    </div>
-
-    <div class="error-state" *ngIf="!isLoading && errorMessage">
+    <!-- ════════ STATE 2: ERROR ════════ -->
+    <div class="state-card error-state" *ngIf="!isLoading && errorMessage">
+      <div class="state-icon-wrap error-icon">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+      </div>
+      <h2>Something went wrong</h2>
       <p>{{ errorMessage }}</p>
-
-      <button class="retry-button" (click)="loadFavorites()">
-        Try Again
+      <button class="action-btn primary-btn" (click)="loadFavorites()">
+        <i class="bi bi-arrow-clockwise"></i>
+        <span>Try Again</span>
       </button>
     </div>
 
-    <div class="empty-state" *ngIf="!isLoading && !errorMessage && favorites.length === 0">
-      <div class="empty-icon">
-        <i class="bi bi-film"></i>
+    <!-- ════════ STATE 3: EMPTY ════════ -->
+    <div class="state-card empty-state" *ngIf="!isLoading && !errorMessage && favorites.length === 0">
+      <div class="state-icon-wrap">
+        <i class="bi bi-heart"></i>
       </div>
-
-      <h2>No favorites yet</h2>
-
+      <h2>Your playlist is empty</h2>
       <p>
-        Start exploring movies and add your
-        favorites to build your personal playlist.
+        Explore movies and tap the heart icon on any title to save it to your personal favorites collection.
       </p>
-
-      <a routerLink="/movies" class="browse-button">
-        Browse Movies
+      <a routerLink="/movies" class="action-btn primary-btn">
+        <i class="bi bi-compass"></i>
+        <span>Browse Movies</span>
       </a>
     </div>
 
+    <!-- ════════ FAVORITES GRID ════════ -->
     <div class="favorites-grid" *ngIf="!isLoading && !errorMessage && favorites.length > 0">
 
       <div class="favorite-card" *ngFor="let favorite of favorites">
 
-        <a [routerLink]="['/movie-details', favorite.movieId]" class="poster-link">
-          <img *ngIf="favorite.posterPath" [src]="imageBase + favorite.posterPath" [alt]="favorite.title" />
+        <!-- Poster Box -->
+        <div class="poster-container" [routerLink]="['/movie-details', favorite.movieId]">
+          <img
+            [src]="getPosterUrl(favorite.posterPath)"
+            [alt]="favorite.title"
+            loading="lazy"
+            (error)="$any($event.target).src = 'https://via.placeholder.com/300x450?text=No+Poster'" />
 
-          <div class="no-poster" *ngIf="!favorite.posterPath">
-            <i class="bi bi-film"></i>
+          <!-- Rating Badge -->
+          <div class="rating-badge" *ngIf="favorite.voteAverage">
+            <i class="bi bi-star-fill"></i>
+            <span>{{ favorite.voteAverage | number:'1.1-1' }}</span>
           </div>
-        </a>
 
+          <!-- Quick Remove Heart Button -->
+          <button
+            class="fav-remove-btn"
+            [disabled]="removingId === favorite.movieKey"
+            (click)="$event.stopPropagation(); removeFavorite(favorite)"
+            title="Remove from favorites"
+            aria-label="Remove from favorites">
+            <i class="bi" [ngClass]="removingId === favorite.movieKey ? 'bi-hourglass-split' : 'bi-heart-fill'"></i>
+          </button>
+        </div>
+
+        <!-- Movie Info -->
         <div class="movie-info">
-
-          <h2>
+          <h3 class="movie-title" [title]="favorite.title" [routerLink]="['/movie-details', favorite.movieId]">
             {{ favorite.title }}
-          </h2>
+          </h3>
 
-          <div class="movie-meta">
-
-            <span *ngIf="favorite.releaseDate">
+          <div class="movie-meta-row">
+            <span class="release-year" *ngIf="favorite.releaseDate">
               <i class="bi bi-calendar3"></i>
               {{ favorite.releaseDate | date:'yyyy' }}
             </span>
-
-            <span *ngIf="favorite.voteAverage">
-              <i class="bi bi-star-fill"></i>
-              {{ favorite.voteAverage | number:'1.1-1' }}
-            </span>
-
           </div>
 
-          <button class="remove-button" [disabled]="removingId === favorite.movieKey"
-            (click)="removeFavorite(favorite)">
-            <i class="bi" [ngClass]="removingId === favorite.movieKey ? 'bi-hourglass-split' : 'bi-heart-break'"></i>
-            {{
-            removingId === favorite.movieKey
-            ? 'Removing...'
-            : 'Remove'
-            }}
-          </button>
-
+          <!-- Bottom Action Buttons -->
+          <div class="card-footer-actions">
+            <a [routerLink]="['/movie-details', favorite.movieId]" class="btn-watch-link">
+              <i class="bi bi-play-circle-fill"></i>
+              <span>Watch</span>
+            </a>
+            <button
+              class="btn-text-remove"
+              [disabled]="removingId === favorite.movieKey"
+              (click)="removeFavorite(favorite)">
+              <i class="bi" [ngClass]="removingId === favorite.movieKey ? 'bi-hourglass-split' : 'bi-trash3'"></i>
+              <span>{{ removingId === favorite.movieKey ? 'Removing...' : 'Remove' }}</span>
+            </button>
+          </div>
         </div>
 
       </div>
@@ -95,5 +133,50 @@
     </div>
 
   </div>
+
+  <!-- ════════ SLEEK BOTTOM NAVIGATION BAR ════════ -->
+  <nav class="mobile-bottom-nav">
+    <a routerLink="/home" class="nav-tab" aria-label="Home">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-house-door-fill"></i>
+      </div>
+      <span>Home</span>
+    </a>
+
+    <a routerLink="/movies" class="nav-tab" aria-label="Movies">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-play-circle-fill"></i>
+      </div>
+      <span>Movies</span>
+    </a>
+
+    <a routerLink="/watchlist" class="nav-tab" aria-label="Watchlist">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-bookmark-fill"></i>
+      </div>
+      <span>Watchlist</span>
+    </a>
+
+    <a routerLink="/favorites" class="nav-tab active" aria-label="Favorites">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-heart-fill"></i>
+      </div>
+      <span>Favorites</span>
+    </a>
+
+    <a routerLink="/matching" class="nav-tab" aria-label="Community">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <span>Community</span>
+    </a>
+
+    <a routerLink="/profile" class="nav-tab" aria-label="Profile">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-person-fill"></i>
+      </div>
+      <span>Profile</span>
+    </a>
+  </nav>
 
 </ion-content>

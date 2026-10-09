@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { IonContent } from '@ionic/angular';
 
 import { TmdbService } from '../../core/services/tmdb.service';
+import { MovieService } from '../../core/services/movie.service';
 import { UserService } from '../../core/services/user.service';
 import { AuthService } from '../../core/services/auth.service';
 import { FavoritesService, FavoriteItem } from '../../core/services/favorites';
@@ -51,19 +52,18 @@ export class HomePage implements OnInit {
   userPhoto: string = '';
   isFeaturedFavorite = false;
 
-  selectedCategory: string = 'ALL';
-  categories = ['ALL', 'RECOMMENDED', 'TRENDING', 'TOP RATED', 'WATCHLIST', 'COMMUNITY', 'FAVORITES'];
-
   currentHeroIndex = 0;
   heroMovies: any[] = [];
 
   constructor(
     private tmdbService: TmdbService,
+    private movieService: MovieService,
     private userService: UserService,
     private authService: AuthService,
     private favoritesService: FavoritesService,
     private watchlistService: WatchlistService,
-    private recommendationService: RecommendationService
+    private recommendationService: RecommendationService,
+    private cdr: ChangeDetectorRef
   ) {
     // Instant restore from cache if available so UI is rich from frame 0
     if (HomePage.cachedMovies.length > 0) {
@@ -90,12 +90,45 @@ export class HomePage implements OnInit {
   }
 
   async ionViewWillEnter(): Promise<void> {
-    // When navigating to home (e.g. right after login), ensure data is loaded
-    if (this.movies.length === 0) {
-      await this.loadInitialData();
-    } else {
-      await this.refreshUserData();
+    // Trigger detection immediately so cached data displays instantly on entry
+    this.cdr.detectChanges();
+    await this.loadInitialData();
+    this.cdr.detectChanges();
+  }
+
+  getPosterUrl(pathOrMovie: any): string {
+    if (!pathOrMovie) return 'https://via.placeholder.com/300x450?text=No+Poster';
+    let path = '';
+    if (typeof pathOrMovie === 'string') {
+      path = pathOrMovie.trim();
+    } else if (typeof pathOrMovie === 'object') {
+      path = (pathOrMovie.poster_path || pathOrMovie.posterPath || pathOrMovie.backdrop_path || pathOrMovie.backdropPath || '').toString().trim();
     }
+    if (!path) return 'https://via.placeholder.com/300x450?text=No+Poster';
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:') || path.startsWith('assets/')) {
+      return path;
+    }
+    return this.imageBase + (path.startsWith('/') ? path : '/' + path);
+  }
+
+  getBackdropUrl(pathOrMovie: any): string {
+    if (!pathOrMovie) return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&q=80';
+    let path = '';
+    if (typeof pathOrMovie === 'string') {
+      path = pathOrMovie.trim();
+    } else if (typeof pathOrMovie === 'object') {
+      // For custom movies added by admin, always prioritize the exact URL the admin set
+      if (pathOrMovie.isCustom) {
+        path = (pathOrMovie.poster_path || pathOrMovie.posterPath || pathOrMovie.backdrop_path || pathOrMovie.backdropPath || '').toString().trim();
+      } else {
+        path = (pathOrMovie.backdrop_path || pathOrMovie.backdropPath || pathOrMovie.poster_path || pathOrMovie.posterPath || '').toString().trim();
+      }
+    }
+    if (!path) return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&q=80';
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:') || path.startsWith('assets/')) {
+      return path;
+    }
+    return this.backdropBase + (path.startsWith('/') ? path : '/' + path);
   }
 
   private populateMovies(results: any[]): void {
@@ -105,27 +138,61 @@ export class HomePage implements OnInit {
     this.trendingMovies = this.movies.slice(1, 10);
     this.topRatedMovies = [...this.movies].sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0)).slice(0, 8);
     this.checkFeaturedFavorite();
+    this.cdr.detectChanges();
   }
 
   async loadInitialData(): Promise<void> {
     if (this.movies.length === 0) {
       this.isLoading = true;
+      this.cdr.detectChanges();
     }
 
     try {
-      // 1. Fetch TMDB movies
-      const data = await this.tmdbService.getPopularMovies();
-      if (data && data.results && data.results.length > 0) {
-        HomePage.cachedMovies = data.results;
-        this.populateMovies(data.results);
+      // 1. Fetch custom Firestore movies
+      let customFormatted: any[] = [];
+      try {
+        const firestoreMovies = await this.movieService.getFirestoreMovies();
+        customFormatted = firestoreMovies.map(cm => ({
+          id: cm.numericId || cm.id,
+          firestoreDocId: cm.id,
+          title: cm.title,
+          overview: cm.overview,
+          poster_path: cm.posterPath,
+          posterPath: cm.posterPath,
+          backdrop_path: cm.posterPath || cm.backdropPath,
+          backdropPath: cm.posterPath || cm.backdropPath,
+          vote_average: cm.voteAverage,
+          release_date: cm.releaseDate,
+          isCustom: true
+        }));
+      } catch (fsErr) {
+        console.warn('Firestore movies error on home:', fsErr);
+      }
+
+      // 2. Fetch TMDB movies
+      let tmdbMovies: any[] = [];
+      try {
+        const data = await this.tmdbService.getPopularMovies();
+        if (data && data.results && data.results.length > 0) {
+          tmdbMovies = data.results;
+        }
+      } catch (tmdbErr) {
+        console.warn('TMDB movies error on home:', tmdbErr);
+      }
+
+      const combined = [...customFormatted, ...tmdbMovies];
+      if (combined.length > 0) {
+        HomePage.cachedMovies = combined;
+        this.populateMovies(combined);
       }
     } catch (err) {
-      console.error('Error fetching TMDB movies:', err);
+      console.error('Error loading movies on home:', err);
     } finally {
       this.isLoading = false;
+      this.cdr.detectChanges();
     }
 
-    // 2. Fetch User & Features Data
+    // 3. Fetch User & Features Data
     await this.refreshUserData();
   }
 
@@ -165,6 +232,8 @@ export class HomePage implements OnInit {
         } catch (recErr) {
           console.warn('Could not fetch recommendations:', recErr);
         }
+
+        this.cdr.detectChanges();
       }
     } catch (e) {
       console.warn('Could not fetch user/favorites info:', e);
@@ -176,6 +245,7 @@ export class HomePage implements OnInit {
       this.currentHeroIndex = index;
       this.featuredMovie = this.heroMovies[index];
       this.checkFeaturedFavorite();
+      this.cdr.detectChanges();
     }
   }
 
@@ -215,9 +285,6 @@ export class HomePage implements OnInit {
     }
   }
 
-  setCategory(category: string): void {
-    this.selectedCategory = category;
-  }
 
   /**
    * Enables smooth horizontal drag scrolling with mouse or touch

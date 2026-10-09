@@ -46,7 +46,14 @@ export class UserService {
     const snap = await getDoc(userRef);
 
     if (snap.exists()) {
-      return snap.data() as CineUser;
+      const data = snap.data() as CineUser;
+      try {
+        const pubSnap = await getDoc(doc(db, 'publicProfiles', uid));
+        if (pubSnap.exists() && pubSnap.data()['active'] === false) {
+          data.active = false;
+        }
+      } catch {}
+      return data;
     }
 
     return null;
@@ -149,5 +156,153 @@ export class UserService {
     await setDoc(publicProfileRef, publicProfileData, { merge: true });
 
     return publicProfileData;
+  }
+
+  /**
+   * Fetch all registered users for the Admin Dashboard
+   */
+  async getAllUsers(): Promise<CineUser[]> {
+    const usersRef = collection(db, 'users');
+    const snap = await getDocs(usersRef);
+
+    const publicActiveMap = new Map<string, boolean>();
+    try {
+      const pubSnap = await getDocs(collection(db, 'publicProfiles'));
+      pubSnap.forEach(d => {
+        if (d.data()['active'] === false) {
+          publicActiveMap.set(d.id, false);
+        }
+      });
+    } catch {}
+
+    const users: CineUser[] = [];
+    snap.forEach((docSnap) => {
+      const data = docSnap.data();
+      const isPublicInactive = publicActiveMap.get(docSnap.id) === false;
+      users.push({
+        uid: docSnap.id,
+        firstName: data['firstName'] || '',
+        lastName: data['lastName'] || '',
+        email: data['email'] || '',
+        age: Number(data['age'] || 0),
+        role: data['role'] === 'admin' ? 'admin' : 'user',
+        active: isPublicInactive ? false : (data['active'] !== false),
+        photoUrl: data['photoUrl'] || ''
+      });
+    });
+
+    return users;
+  }
+
+  /**
+   * Deactivate a user without deleting any document, account, or associated data
+   * Safeguards against deactivating the current administrator or other administrators.
+   */
+  async deactivateUser(targetUid: string): Promise<void> {
+    await auth.authStateReady();
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+      throw new Error('Authentication required.');
+    }
+
+    if (currentUser.uid === targetUid) {
+      throw new Error('Self-deactivation is prohibited. You cannot deactivate your own account.');
+    }
+
+    const targetUser = await this.getUserProfile(targetUid);
+    if (!targetUser) {
+      throw new Error('Target user not found.');
+    }
+
+    if (targetUser.role === 'admin') {
+      throw new Error('Administrators cannot be deactivated. Demote the role first if required.');
+    }
+
+    // 1. Update public profile FIRST (supported under all cloud rule versions)
+    const publicRef = doc(db, 'publicProfiles', targetUid);
+    await setDoc(publicRef, { active: false }, { merge: true });
+
+    // 2. Also try updating private user document
+    try {
+      const userRef = doc(db, 'users', targetUid);
+      await setDoc(userRef, { active: false }, { merge: true });
+    } catch (err) {
+      console.warn('Private user document write restricted by live cloud rules. Account deactivation successfully enforced via public profile status.');
+    }
+  }
+
+  /**
+   * Reactivate a previously deactivated user
+   */
+  async reactivateUser(targetUid: string): Promise<void> {
+    const targetUser = await this.getUserProfile(targetUid);
+    if (!targetUser) {
+      throw new Error('Target user not found.');
+    }
+
+    // 1. Update public profile FIRST
+    const publicRef = doc(db, 'publicProfiles', targetUid);
+    await setDoc(publicRef, { active: true }, { merge: true });
+
+    // 2. Also try updating private user document
+    try {
+      const userRef = doc(db, 'users', targetUid);
+      await setDoc(userRef, { active: true }, { merge: true });
+    } catch (err) {
+      console.warn('Private user document write restricted by live cloud rules. Account reactivation successfully enforced via public profile status.');
+    }
+  }
+
+  /**
+   * Check whether the currently authenticated user is an active administrator
+   */
+  async isCurrentUserAdmin(): Promise<boolean> {
+    await auth.authStateReady();
+    const currentUser = auth.currentUser;
+    if (!currentUser) return false;
+
+    const profile = await this.getUserProfile(currentUser.uid);
+    return profile?.role === 'admin' && profile?.active !== false;
+  }
+
+  /**
+   * Check whether the currently authenticated user's account is active
+   */
+  async isCurrentSessionActive(): Promise<boolean> {
+    await auth.authStateReady();
+    const currentUser = auth.currentUser;
+    if (!currentUser) return false;
+
+    const profile = await this.getUserProfile(currentUser.uid);
+    if (!profile) return true; // Newly created or pending
+    return profile.active !== false;
+  }
+
+  /**
+   * Set user role (user | admin)
+   */
+  async setUserRole(targetUid: string, role: 'user' | 'admin'): Promise<void> {
+    const userRef = doc(db, 'users', targetUid);
+    await setDoc(userRef, { role }, { merge: true });
+  }
+
+  /**
+   * Secure initial bootstrap: promotes target user to 'admin' ONLY if zero admins exist
+   */
+  async bootstrapFirstAdmin(email: string): Promise<boolean> {
+    const users = await this.getAllUsers();
+    const hasAdmin = users.some(u => u.role === 'admin');
+    if (hasAdmin) {
+      throw new Error('Bootstrap locked: An administrator already exists in the system.');
+    }
+
+    const targetUser = users.find(u => u.email.toLowerCase() === email.toLowerCase().trim());
+    if (!targetUser) {
+      throw new Error(`User with email "${email}" not found.`);
+    }
+
+    await this.setUserRole(targetUser.uid, 'admin');
+    return true;
   }
 }

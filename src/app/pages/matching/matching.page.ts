@@ -49,16 +49,34 @@ export class MatchingPage implements OnInit {
     private cdr: ChangeDetectorRef
   ) { }
 
+  getPosterUrl(path: string | undefined): string {
+    if (!path) return 'https://via.placeholder.com/200x300?text=No+Poster';
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:') || path.startsWith('assets/')) {
+      return path;
+    }
+    return 'https://image.tmdb.org/t/p/w200' + (path.startsWith('/') ? path : '/' + path);
+  }
+
+  private isLoaded = false;
+
   async ngOnInit(): Promise<void> {
-    const user = await this.authService.waitForAuth();
-    this.currentUserId = user?.uid || null;
-    await this.loadMatches();
+    if (!this.isLoaded) {
+      this.isLoaded = true;
+      const user = await this.authService.waitForAuth();
+      this.currentUserId = user?.uid || null;
+      await this.loadMatches();
+    }
   }
 
   async ionViewWillEnter(): Promise<void> {
-    const user = await this.authService.waitForAuth();
-    this.currentUserId = user?.uid || null;
-    await this.loadMatches();
+    if (!this.isLoaded || this.matches.length === 0) {
+      this.isLoaded = true;
+      const user = await this.authService.waitForAuth();
+      this.currentUserId = user?.uid || null;
+      await this.loadMatches();
+    } else {
+      this.cdr.detectChanges();
+    }
   }
 
   /**

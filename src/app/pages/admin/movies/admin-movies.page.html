@@ -1,0 +1,312 @@
+<ion-content [fullscreen]="true" class="admin-content">
+
+  <div class="admin-layout">
+
+    <!-- ════════ TOP ADMIN NAV BAR ════════ -->
+    <header class="admin-topbar">
+      <div class="topbar-brand">
+        <div class="brand-badge">
+          <i class="bi bi-film"></i>
+        </div>
+        <div class="brand-text">
+          <h1>Cine<span>Verse</span></h1>
+          <span class="panel-tag">MOVIE CATALOG MANAGEMENT</span>
+        </div>
+      </div>
+
+      <nav class="admin-nav-links">
+        <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
+          <i class="bi bi-speedometer2"></i>
+          <span>Dashboard</span>
+        </a>
+        <a routerLink="/admin/movies" routerLinkActive="active" class="nav-item">
+          <i class="bi bi-film"></i>
+          <span>Movies</span>
+        </a>
+        <a routerLink="/admin/users" routerLinkActive="active" class="nav-item">
+          <i class="bi bi-people-fill"></i>
+          <span>Users</span>
+        </a>
+      </nav>
+
+      <div class="topbar-user">
+        <a routerLink="/home" class="btn-return" title="Return to CineVerse catalog">
+          <i class="bi bi-box-arrow-up-right"></i>
+          <span>App</span>
+        </a>
+        <button (click)="logout()" class="btn-logout" title="Log out">
+          <i class="bi bi-power"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- ════════ BODY ════════ -->
+    <main class="dashboard-body">
+
+      <!-- Success Notification Toast/Banner -->
+      <div class="success-banner" *ngIf="successFeedback">
+        <i class="bi bi-check-circle-fill"></i>
+        <span>{{ successFeedback }}</span>
+      </div>
+
+      <!-- Error Banner -->
+      <div class="error-banner" *ngIf="errorMessage && !isLoading">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>{{ errorMessage }}</span>
+        <button (click)="loadMovies()" class="retry-btn">Retry</button>
+      </div>
+
+      <!-- Action & Filter Bar -->
+      <div class="catalog-toolbar">
+        <div class="toolbar-search">
+          <i class="bi bi-search search-icon"></i>
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (input)="onSearchChange()"
+            placeholder="Search custom movies by title or genre..."
+            class="search-input" />
+          <button *ngIf="searchTerm" (click)="searchTerm = ''; applyFilter()" class="clear-btn">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
+
+        <div class="toolbar-actions">
+          <button (click)="openAddMovieModal()" class="add-movie-btn">
+            <i class="bi bi-plus-lg"></i>
+            <span>Add New Movie</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Genre Filter Pills -->
+      <div class="genre-filter-row">
+        <button
+          class="genre-pill"
+          [class.active]="selectedGenreFilter === 'ALL'"
+          (click)="onGenreFilterChange('ALL')">
+          All Genres ({{ movies.length }})
+        </button>
+        <button
+          *ngFor="let genre of availableGenres"
+          class="genre-pill"
+          [class.active]="selectedGenreFilter === genre"
+          (click)="onGenreFilterChange(genre)">
+          {{ genre }}
+        </button>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading-state" *ngIf="isLoading">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p>Loading catalog from Firestore...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-catalog-state" *ngIf="!isLoading && filteredMovies.length === 0">
+        <div class="empty-icon-circle">
+          <i class="bi bi-film"></i>
+        </div>
+        <h3>No Movies Found</h3>
+        <p *ngIf="movies.length === 0">Your Firestore movie catalog is currently empty. Start by adding your first movie below.</p>
+        <p *ngIf="movies.length > 0">No movies match your current search query or genre filter.</p>
+        <button (click)="openAddMovieModal()" class="cta-btn primary" *ngIf="movies.length === 0">
+          <i class="bi bi-plus-circle-fill"></i> Add First Movie
+        </button>
+      </div>
+
+      <!-- Movies Grid -->
+      <div class="movies-grid" *ngIf="!isLoading && filteredMovies.length > 0">
+
+        <div class="movie-admin-card" *ngFor="let movie of filteredMovies">
+          <div class="card-poster-wrap">
+            <img
+              [src]="movie.posterPath || 'assets/placeholder-movie.jpg'"
+              [alt]="movie.title"
+              class="card-poster"
+              (error)="$any($event.target).src = 'https://via.placeholder.com/200x300?text=Movie'" />
+            <div class="rating-badge">
+              <i class="bi bi-star-fill"></i> {{ movie.voteAverage | number:'1.1-1' }}
+            </div>
+            <div class="custom-tag">
+              <i class="bi bi-check2-circle"></i> Custom
+            </div>
+          </div>
+
+          <div class="card-info">
+            <h3 class="card-title" [title]="movie.title">{{ movie.title }}</h3>
+            <span class="card-release"><i class="bi bi-calendar3"></i> {{ movie.releaseDate }}</span>
+
+            <div class="card-genre-tags">
+              <span class="genre-tag" *ngFor="let g of movie.genres.slice(0, 3)">{{ g }}</span>
+            </div>
+
+            <p class="card-overview" [title]="movie.overview">{{ movie.overview }}</p>
+
+            <div class="card-actions">
+              <button (click)="openEditMovieModal(movie)" class="btn-card-action edit" title="Edit movie details">
+                <i class="bi bi-pencil-fill"></i>
+                <span>Edit</span>
+              </button>
+              <a [routerLink]="['/movie-details', movie.id]" class="btn-card-action preview" title="View details in application catalog">
+                <i class="bi bi-box-arrow-up-right"></i>
+                <span>Preview</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- ════════ ADD / EDIT MOVIE MODAL ════════ -->
+  <div class="modal-backdrop" *ngIf="showMovieFormModal" (click)="closeModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="bi" [ngClass]="isEditing ? 'bi-pencil-square' : 'bi-plus-circle-fill'"></i>
+          <h2>{{ isEditing ? 'Edit Movie Details' : 'Add Movie to Catalog' }}</h2>
+        </div>
+        <button (click)="closeModal()" class="btn-close-modal" aria-label="Close modal">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- Error Message inside modal -->
+        <div class="modal-error-alert" *ngIf="formError">
+          <i class="bi bi-exclamation-octagon-fill"></i>
+          <span>{{ formError }}</span>
+        </div>
+
+        <form (ngSubmit)="submitMovieForm()" class="movie-form">
+
+          <!-- Title Field -->
+          <div class="form-group">
+            <label for="movieTitle">Movie Title <span class="required">*</span></label>
+            <input
+              id="movieTitle"
+              type="text"
+              [(ngModel)]="formTitle"
+              name="title"
+              placeholder="e.g. Inception, Dune: Part Two"
+              required
+              class="form-control" />
+          </div>
+
+          <!-- Overview / Synopsis -->
+          <div class="form-group">
+            <label for="movieOverview">Overview / Synopsis <span class="required">*</span></label>
+            <textarea
+              id="movieOverview"
+              [(ngModel)]="formOverview"
+              name="overview"
+              rows="3"
+              placeholder="Provide a captivating description of the plot..."
+              required
+              class="form-control textarea"></textarea>
+          </div>
+
+          <!-- Two Column Row: Release Date & Vote Rating -->
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="movieRelease">Release Date <span class="required">*</span></label>
+              <input
+                id="movieRelease"
+                type="date"
+                [(ngModel)]="formReleaseDate"
+                name="releaseDate"
+                required
+                class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="movieRating">Initial Rating (1.0 - 10.0)</label>
+              <input
+                id="movieRating"
+                type="number"
+                step="0.1"
+                min="1.0"
+                max="10.0"
+                [(ngModel)]="formVoteAverage"
+                name="voteAverage"
+                class="form-control" />
+            </div>
+          </div>
+
+          <!-- Genres Selection -->
+          <div class="form-group">
+            <label>Genres <span class="required">*</span> <small>(Click to toggle)</small></label>
+            <div class="genres-picker">
+              <button
+                type="button"
+                *ngFor="let genre of availableGenres"
+                class="genre-chip"
+                [class.selected]="isGenreSelected(genre)"
+                (click)="toggleGenre(genre)">
+                <i class="bi" [ngClass]="isGenreSelected(genre) ? 'bi-check2' : 'bi-plus'"></i>
+                <span>{{ genre }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Poster Option: URL or File Upload -->
+          <div class="form-group">
+            <label>Poster Image <span class="required">*</span></label>
+            <div class="poster-input-grid">
+              <div class="poster-url-input">
+                <label class="sub-label">Image URL</label>
+                <input
+                  type="url"
+                  [(ngModel)]="formPosterUrl"
+                  name="posterUrl"
+                  placeholder="https://image.tmdb.org/t/p/w500/... or image URL"
+                  class="form-control" />
+              </div>
+
+              <div class="poster-file-input">
+                <label class="sub-label">Or Upload File to Firebase Storage</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  (change)="onPosterFileSelected($event)"
+                  class="file-input" />
+              </div>
+            </div>
+
+            <!-- Poster Preview -->
+            <div class="poster-preview-box" *ngIf="posterPreviewUrl || formPosterUrl">
+              <span class="preview-label">Poster Preview:</span>
+              <img
+                [src]="posterPreviewUrl || formPosterUrl"
+                alt="Poster preview"
+                class="poster-preview-img"
+                (error)="$any($event.target).style.display = 'none'" />
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="modal-footer">
+            <button type="button" (click)="closeModal()" class="btn-cancel" [disabled]="isSubmitting">
+              Cancel
+            </button>
+            <button type="submit" class="btn-submit" [disabled]="isSubmitting">
+              <ion-spinner name="crescent" *ngIf="isSubmitting"></ion-spinner>
+              <i class="bi" [ngClass]="isEditing ? 'bi-check-lg' : 'bi-plus-lg'" *ngIf="!isSubmitting"></i>
+              <span>{{ isSubmitting ? 'Saving to Firestore...' : (isEditing ? 'Save Changes' : 'Add Movie to Catalog') }}</span>
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+
+    </div>
+  </div>
+
+</ion-content>

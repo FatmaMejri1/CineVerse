@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { adminGuard } from './core/guards/admin.guard';
+import { activeAuthGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
 
@@ -32,6 +34,7 @@ export const routes: Routes = [
 
   {
     path: 'home',
+    canActivate: [activeAuthGuard],
     loadComponent: () =>
       import('./pages/home/home.page').then(
         (m) => m.HomePage
@@ -40,6 +43,7 @@ export const routes: Routes = [
 
   {
     path: 'movies',
+    canActivate: [activeAuthGuard],
     loadComponent: () =>
       import('./pages/movies/movies.page').then(
         (m) => m.MoviesPage
@@ -48,6 +52,7 @@ export const routes: Routes = [
 
   {
     path: 'favorites',
+    canActivate: [activeAuthGuard],
     loadComponent: () =>
       import('./pages/favorites/favorites.page').then(
         (m) => m.FavoritesPage
@@ -56,6 +61,7 @@ export const routes: Routes = [
 
   {
     path: 'watchlist',
+    canActivate: [activeAuthGuard],
     loadComponent: () =>
       import('./pages/watchlist/watchlist.page').then(
         (m) => m.WatchlistPage
@@ -64,6 +70,7 @@ export const routes: Routes = [
 
   {
     path: 'matching',
+    canActivate: [activeAuthGuard],
     loadComponent: () =>
       import('./pages/matching/matching.page').then(
         (m) => m.MatchingPage
@@ -72,6 +79,7 @@ export const routes: Routes = [
 
   {
     path: 'movie-details/:id',
+    canActivate: [activeAuthGuard],
     loadComponent: () =>
       import('./pages/movie-details/movie-details.page').then(
         (m) => m.MovieDetailsPage
@@ -80,9 +88,38 @@ export const routes: Routes = [
 
   {
     path: 'profile',
+    canActivate: [activeAuthGuard],
     loadComponent: () =>
       import('./pages/profile/profile.page').then(
         (m) => m.ProfilePage
+      ),
+  },
+
+  // ════════ ADMIN ROUTES (PROTECTED BY ADMINGUARD) ════════
+  {
+    path: 'admin',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./pages/admin/dashboard/admin-dashboard.page').then(
+        (m) => m.AdminDashboardPage
+      ),
+  },
+
+  {
+    path: 'admin/movies',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./pages/admin/movies/admin-movies.page').then(
+        (m) => m.AdminMoviesPage
+      ),
+  },
+
+  {
+    path: 'admin/users',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./pages/admin/users/admin-users.page').then(
+        (m) => m.AdminUsersPage
       ),
   },
 

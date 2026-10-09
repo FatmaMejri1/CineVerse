@@ -52,7 +52,12 @@
       <div class="movie-card" *ngFor="let movie of watchlist">
 
         <a [routerLink]="['/movie-details', movie.movieId]" class="poster-link">
-          <img *ngIf="movie.posterPath" [src]="imageBase + movie.posterPath" [alt]="movie.title" loading="lazy" />
+          <img 
+            *ngIf="movie.posterPath" 
+            [src]="getPosterUrl(movie.posterPath)" 
+            [alt]="movie.title" 
+            loading="lazy"
+            (error)="$any($event.target).src = 'https://via.placeholder.com/300x450?text=No+Poster'" />
 
           <div class="no-poster" *ngIf="!movie.posterPath">
             <i class="bi bi-film"></i>
@@ -95,5 +100,50 @@
     </div>
 
   </div>
+
+  <!-- ════════ SLEEK BOTTOM NAVIGATION BAR ════════ -->
+  <nav class="mobile-bottom-nav">
+    <a routerLink="/home" routerLinkActive="active" class="nav-tab" aria-label="Home">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-house-door-fill"></i>
+      </div>
+      <span>Home</span>
+    </a>
+
+    <a routerLink="/movies" routerLinkActive="active" class="nav-tab" aria-label="Movies">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-play-circle-fill"></i>
+      </div>
+      <span>Movies</span>
+    </a>
+
+    <a routerLink="/watchlist" routerLinkActive="active" class="nav-tab" aria-label="Watchlist">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-bookmark-fill"></i>
+      </div>
+      <span>Watchlist</span>
+    </a>
+
+    <a routerLink="/favorites" routerLinkActive="active" class="nav-tab" aria-label="Favorites">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-heart-fill"></i>
+      </div>
+      <span>Favorites</span>
+    </a>
+
+    <a routerLink="/matching" routerLinkActive="active" class="nav-tab" aria-label="Community">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <span>Community</span>
+    </a>
+
+    <a routerLink="/profile" routerLinkActive="active" class="nav-tab" aria-label="Profile">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-person-fill"></i>
+      </div>
+      <span>Profile</span>
+    </a>
+  </nav>
 
 </ion-content>

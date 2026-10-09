@@ -808,7 +808,7 @@
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding: 0 8px;
+  padding: 0 4px;
   padding-bottom: env(safe-area-inset-bottom, 0);
   z-index: 999;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
@@ -816,6 +816,7 @@
 
 .nav-tab {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -832,14 +833,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 21px;
+    font-size: 20px;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   span {
-    font-size: 10px;
+    font-size: 9.5px;
     font-weight: 600;
-    letter-spacing: 0.2px;
+    letter-spacing: 0.1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     transition: color 0.2s ease;
   }
 
@@ -876,4 +880,36 @@
     flex-direction: column;
     gap: 12px;
   }
+}
+
+.admin-portal-box {
+  margin-top: 14px;
+  width: 100%;
+}
+
+.admin-portal-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.55);
+  }
+}
+
+.pill-badge.role.admin-pill {
+  background: rgba(168, 85, 247, 0.25);
+  border-color: rgba(168, 85, 247, 0.5);
+  color: #d8b4fe;
 }

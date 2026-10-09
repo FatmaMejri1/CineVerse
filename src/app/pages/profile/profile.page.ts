@@ -64,8 +64,22 @@ export class ProfilePage implements OnInit {
     private cdr: ChangeDetectorRef
   ) { }
 
+  private isLoaded = false;
+
   async ngOnInit(): Promise<void> {
-    await this.loadProfile();
+    if (!this.isLoaded) {
+      this.isLoaded = true;
+      await this.loadProfile();
+    }
+  }
+
+  async ionViewWillEnter(): Promise<void> {
+    if (!this.isLoaded || !this.userProfile) {
+      this.isLoaded = true;
+      await this.loadProfile();
+    } else {
+      this.cdr.detectChanges();
+    }
   }
 
   // --------------------------------------------------

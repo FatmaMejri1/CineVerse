@@ -64,13 +64,22 @@
           <p class="user-display-email">{{ userProfile?.email || email }}</p>
 
           <div class="hero-badges">
-            <span class="pill-badge role">
-              <i class="bi bi-film"></i>
+            <span class="pill-badge role" [class.admin-pill]="userProfile?.role === 'admin'">
+              <i class="bi" [ngClass]="userProfile?.role === 'admin' ? 'bi-shield-lock-fill' : 'bi-film'"></i>
               {{ (userProfile?.role || 'Member') | titlecase }}
             </span>
             <span class="pill-badge active" *ngIf="userProfile?.active !== false">
               <i class="bi bi-check-circle-fill"></i> Active
             </span>
+          </div>
+
+          <!-- Admin Portal Access (admins only) -->
+          <div *ngIf="userProfile?.role === 'admin'" class="admin-portal-box">
+            <a routerLink="/admin" class="admin-portal-btn">
+              <i class="bi bi-speedometer2"></i>
+              <span>Open Admin Dashboard</span>
+              <i class="bi bi-arrow-right"></i>
+            </a>
           </div>
         </div>
 
@@ -384,6 +393,13 @@
         <i class="bi bi-play-circle-fill"></i>
       </div>
       <span>Movies</span>
+    </a>
+
+    <a routerLink="/watchlist" routerLinkActive="active" class="nav-tab" aria-label="Watchlist">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-bookmark-fill"></i>
+      </div>
+      <span>Watchlist</span>
     </a>
 
     <a routerLink="/favorites" routerLinkActive="active" class="nav-tab" aria-label="Favorites">

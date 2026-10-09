@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { IonContent } from '@ionic/angular';
 
 import { TmdbService } from '../../core/services/tmdb.service';
+import { MovieService } from '../../core/services/movie.service';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -24,7 +25,7 @@ export class MoviesPage implements OnInit {
   // Movies currently displayed on the page
   movies: any[] = [];
 
-  // Original list returned by TMDB
+  // Original combined list
   allMovies: any[] = [];
 
   // TMDB poster URL
@@ -34,20 +35,44 @@ export class MoviesPage implements OnInit {
   isLoading = true;
   errorMessage = '';
 
-  // Search input
+  // Search
   searchTerm = '';
 
   constructor(
     private tmdbService: TmdbService,
+    private movieService: MovieService,
     private cdr: ChangeDetectorRef
   ) { }
 
+  private isLoaded = false;
+
   async ngOnInit(): Promise<void> {
-    await this.loadMovies();
+    if (!this.isLoaded) {
+      this.isLoaded = true;
+      await this.loadMovies();
+    }
+  }
+
+  async ionViewWillEnter(): Promise<void> {
+    if (!this.isLoaded || this.movies.length === 0) {
+      this.isLoaded = true;
+      await this.loadMovies();
+    } else {
+      this.cdr.detectChanges();
+    }
+  }
+
+  getPosterUrl(movie: any): string {
+    if (!movie) return '';
+    const path = movie.poster_path || movie.posterPath || '';
+    if (path.startsWith('http') || path.startsWith('data:') || path.startsWith('assets/')) {
+      return path;
+    }
+    return this.imageBase + path;
   }
 
   /**
-   * Load popular movies from TMDB
+   * Load movies from both Firestore custom collection and TMDB popular movies
    */
   async loadMovies(): Promise<void> {
     this.isLoading = true;
@@ -55,52 +80,73 @@ export class MoviesPage implements OnInit {
     this.movies = [];
     this.cdr.detectChanges();
 
-    console.log('loadMovies() called — fetching from TMDB...');
-
     try {
-      const data = await this.tmdbService.getPopularMovies();
-
-      console.log('RAW TMDB DATA:', data);
-
-      if (!data || !data.results) {
-        throw new Error('TMDB returned no results array');
+      // 1. Fetch custom movies from Firestore
+      let customFormatted: any[] = [];
+      try {
+        const firestoreMovies = await this.movieService.getFirestoreMovies();
+        customFormatted = firestoreMovies.map(cm => ({
+          id: cm.numericId || cm.id,
+          firestoreDocId: cm.id,
+          title: cm.title,
+          overview: cm.overview,
+          poster_path: cm.posterPath,
+          vote_average: cm.voteAverage,
+          release_date: cm.releaseDate,
+          genre_ids: [],
+          genres: cm.genres,
+          isCustom: true
+        }));
+      } catch (fsErr) {
+        console.warn('Could not load Firestore movies:', fsErr);
       }
 
-      this.movies = data.results;
-      this.allMovies = data.results;
+      // 2. Fetch popular movies from TMDB
+      let tmdbMovies: any[] = [];
+      try {
+        const data = await this.tmdbService.getPopularMovies();
+        if (data && data.results) {
+          tmdbMovies = data.results;
+        }
+      } catch (tmdbErr) {
+        console.warn('Could not load TMDB movies:', tmdbErr);
+      }
 
-      console.log(`✅ Movies loaded: ${this.movies.length} movies`);
+      // Merge: Custom Firestore movies first, followed by TMDB movies
+      const combined = [...customFormatted, ...tmdbMovies];
+
+      if (combined.length === 0) {
+        throw new Error('No movies available from catalog or TMDB.');
+      }
+
+      this.allMovies = combined;
+      this.applyFilter();
 
     } catch (error: any) {
-      console.error('❌ Error loading movies:', error);
+      console.error('Error loading movies:', error);
       this.errorMessage = `Failed to load movies: ${error?.message || error}`;
     } finally {
       this.isLoading = false;
-      console.log('isLoading set to false. movies count:', this.movies.length, 'error:', this.errorMessage);
       this.cdr.detectChanges();
     }
   }
 
-  /**
-   * Search movies by title
-   */
-  searchMovies(): void {
+  applyFilter(): void {
+    let result = [...this.allMovies];
 
-    const term = this.searchTerm
-      .trim()
-      .toLowerCase();
-
-    // If search is empty, show all movies again
-    if (!term) {
-      this.movies = this.allMovies;
-      this.cdr.detectChanges();
-      return;
+    const term = this.searchTerm.trim().toLowerCase();
+    if (term) {
+      result = result.filter(movie =>
+        movie.title?.toLowerCase().includes(term) ||
+        movie.overview?.toLowerCase().includes(term)
+      );
     }
 
-    // Filter movies by title
-    this.movies = this.allMovies.filter((movie) =>
-      movie.title?.toLowerCase().includes(term)
-    );
+    this.movies = result;
     this.cdr.detectChanges();
+  }
+
+  searchMovies(): void {
+    this.applyFilter();
   }
 }

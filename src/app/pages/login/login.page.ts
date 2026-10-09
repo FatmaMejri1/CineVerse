@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { IonContent, IonSpinner } from '@ionic/angular';
 
 import { AuthService } from '../../core/services/auth.service';
+import { UserService } from '../../core/services/user.service';
 
 @Component({
   selector: 'app-login',
@@ -19,7 +20,7 @@ import { AuthService } from '../../core/services/auth.service';
     IonSpinner
   ]
 })
-export class LoginPage {
+export class LoginPage implements OnInit {
 
   email = '';
   password = '';
@@ -31,8 +32,17 @@ export class LoginPage {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private userService: UserService,
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
+
+  ngOnInit(): void {
+    const errorParam = this.route.snapshot.queryParamMap.get('error');
+    if (errorParam === 'deactivated') {
+      this.errorMessage = 'Your account has been deactivated by an administrator. Access is restricted.';
+    }
+  }
 
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
@@ -71,9 +81,19 @@ export class LoginPage {
 
       console.log('Login successful:', user);
 
+      // Verify account active status
+      const profile = await this.userService.getUserProfile(user.uid);
+      if (profile && profile.active === false) {
+        await this.authService.logout();
+        this.errorMessage = 'Your CineVerse account has been deactivated by an administrator. Please contact support.';
+        return;
+      }
+
       this.successMessage = 'Welcome back!';
 
-      await this.router.navigate(['/home']);
+      const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || 
+        (profile?.role === 'admin' ? '/admin' : '/home');
+      await this.router.navigateByUrl(returnUrl);
 
     } catch (error: any) {
       console.error('Login error:', error);

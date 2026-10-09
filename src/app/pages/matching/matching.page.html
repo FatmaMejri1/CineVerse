@@ -205,9 +205,10 @@
                 <div class="movie-poster-box">
                   <img
                     *ngIf="movie.posterPath"
-                    [src]="'https://image.tmdb.org/t/p/w200' + movie.posterPath"
+                    [src]="getPosterUrl(movie.posterPath)"
                     [alt]="movie.title"
                     loading="lazy"
+                    (error)="$any($event.target).src = 'https://via.placeholder.com/200x300?text=No+Poster'"
                   />
                   <div class="no-poster-box" *ngIf="!movie.posterPath">
                     <i class="bi bi-film"></i>
@@ -358,6 +359,13 @@
         <i class="bi bi-play-circle-fill"></i>
       </div>
       <span>Movies</span>
+    </a>
+
+    <a routerLink="/watchlist" class="nav-tab" aria-label="Watchlist">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-bookmark-fill"></i>
+      </div>
+      <span>Watchlist</span>
     </a>
 
     <a routerLink="/favorites" class="nav-tab" aria-label="Favorites">

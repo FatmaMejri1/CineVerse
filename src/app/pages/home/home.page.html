@@ -15,16 +15,9 @@
           <i class="bi bi-search"></i>
         </a>
 
-        <!-- Watchlist -->
-        <a routerLink="/watchlist" class="header-icon-btn" aria-label="Watchlist">
-          <i class="bi bi-bookmark-fill"></i>
-          <span class="badge-num" *ngIf="watchlist.length > 0">{{ watchlist.length }}</span>
-        </a>
-
-        <!-- Community Twin Matches -->
-        <a routerLink="/matching" class="header-icon-btn badge-btn" aria-label="Community">
-          <i class="bi bi-people"></i>
-          <span class="pulse-dot"></span>
+        <!-- Admin Dashboard Quick Access (visible only to admins) -->
+        <a routerLink="/admin" class="header-icon-btn admin-badge-btn" *ngIf="userProfile?.role === 'admin'" aria-label="Admin Dashboard" title="Admin Dashboard">
+          <i class="bi bi-shield-lock-fill"></i>
         </a>
 
         <!-- Profile Avatar -->
@@ -36,18 +29,6 @@
     </header>
 
 
-    <!-- ════════ CATEGORIES FILTER TABS ════════ -->
-    <nav class="category-tabs" (pointerdown)="onDragStart($event)" aria-label="Categories">
-      <button 
-        *ngFor="let cat of categories" 
-        class="tab-pill" 
-        [class.active]="selectedCategory === cat"
-        (click)="setCategory(cat)">
-        {{ cat }}
-      </button>
-    </nav>
-
-
     <!-- ════════ CINEMATIC HERO BANNER ════════ -->
     <!-- Ready state -->
     <section class="hero-showcase" *ngIf="featuredMovie">
@@ -55,9 +36,10 @@
         <!-- Backdrop Image with Gradient Vignette -->
         <div class="hero-image-wrap">
           <img 
-            [src]="(backdropBase + (featuredMovie.backdrop_path || featuredMovie.poster_path))" 
+            [src]="getBackdropUrl(featuredMovie)" 
             [alt]="featuredMovie.title" 
-            class="hero-img" />
+            class="hero-img"
+            (error)="$any($event.target).src = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&q=80'" />
           <div class="hero-vignette"></div>
         </div>
 
@@ -129,7 +111,7 @@
     <div class="feed-content">
 
       <!-- SECTION 0: RECOMMENDED FOR YOU (PERSONALIZED) -->
-      <section class="shelf-section" *ngIf="(selectedCategory === 'ALL' || selectedCategory === 'RECOMMENDED') && recommendations.length > 0">
+      <section class="shelf-section" *ngIf="recommendations.length > 0">
         <div class="shelf-header">
           <div>
             <h3>Recommended For You</h3>
@@ -147,7 +129,11 @@
             [routerLink]="['/movie-details', rec.id]">
             
             <div class="media-thumb">
-              <img [src]="imageBase + (rec.backdrop_path || rec.poster_path)" [alt]="rec.title" loading="lazy" />
+              <img 
+                [src]="getBackdropUrl(rec)" 
+                [alt]="rec.title" 
+                loading="lazy"
+                (error)="$any($event.target).src = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=780&q=80'" />
               <div class="play-overlay">
                 <i class="bi bi-play-fill"></i>
               </div>
@@ -171,7 +157,7 @@
       </section>
 
       <!-- SECTION 1: TRENDING MOVIES (HORIZONTAL CAROUSEL) -->
-      <section class="shelf-section" *ngIf="(selectedCategory === 'ALL' || selectedCategory === 'TRENDING') && (trendingMovies.length > 0 || isLoading)">
+      <section class="shelf-section" *ngIf="trendingMovies.length > 0 || isLoading">
         <div class="shelf-header">
           <h3>Trending Movies</h3>
           <a routerLink="/movies" class="see-all-link">See all <i class="bi bi-chevron-right"></i></a>
@@ -184,7 +170,11 @@
             [routerLink]="['/movie-details', movie.id]">
             
             <div class="media-thumb">
-              <img [src]="imageBase + (movie.backdrop_path || movie.poster_path)" [alt]="movie.title" loading="lazy" />
+              <img 
+                [src]="getBackdropUrl(movie)" 
+                [alt]="movie.title" 
+                loading="lazy"
+                (error)="$any($event.target).src = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=780&q=80'" />
               <div class="play-overlay">
                 <i class="bi bi-play-fill"></i>
               </div>
@@ -213,7 +203,7 @@
 
 
       <!-- SECTION 2: TOP RATED / POPULAR -->
-      <section class="shelf-section" *ngIf="(selectedCategory === 'ALL' || selectedCategory === 'TOP RATED') && (topRatedMovies.length > 0 || isLoading)">
+      <section class="shelf-section" *ngIf="topRatedMovies.length > 0 || isLoading">
         <div class="shelf-header">
           <h3>Top Rated Gems</h3>
           <a routerLink="/movies" class="see-all-link">See all <i class="bi bi-chevron-right"></i></a>
@@ -226,7 +216,11 @@
             [routerLink]="['/movie-details', movie.id]">
             
             <div class="poster-thumb">
-              <img [src]="imageBase + movie.poster_path" [alt]="movie.title" loading="lazy" />
+              <img 
+                [src]="getPosterUrl(movie)" 
+                [alt]="movie.title" 
+                loading="lazy"
+                (error)="$any($event.target).src = 'https://via.placeholder.com/300x450?text=No+Poster'" />
               <div class="poster-overlay">
                 <i class="bi bi-play-circle-fill"></i>
               </div>
@@ -249,7 +243,7 @@
 
 
       <!-- SECTION 3: YOUR WATCHLIST -->
-      <section class="shelf-section" *ngIf="(selectedCategory === 'ALL' || selectedCategory === 'WATCHLIST') && watchlist.length > 0">
+      <section class="shelf-section" *ngIf="watchlist.length > 0">
         <div class="shelf-header">
           <div>
             <h3>Your Watchlist</h3>
@@ -265,7 +259,11 @@
             [routerLink]="['/movie-details', item.movieId]">
             
             <div class="poster-thumb">
-              <img [src]="imageBase + item.posterPath" [alt]="item.title" loading="lazy" />
+              <img 
+                [src]="getPosterUrl(item.posterPath)" 
+                [alt]="item.title" 
+                loading="lazy"
+                (error)="$any($event.target).src = 'https://via.placeholder.com/300x450?text=No+Poster'" />
               <span class="watchlist-bookmark-tag"><i class="bi bi-bookmark-fill"></i></span>
               <span class="poster-rating" *ngIf="item.voteAverage">
                 <i class="bi bi-star-fill"></i> {{ item.voteAverage | number:'1.1-1' }}
@@ -277,17 +275,9 @@
         </div>
       </section>
 
-      <!-- EMPTY WATCHLIST CALLOUT (IF IN WATCHLIST TAB & NONE SAVED) -->
-      <div class="empty-fav-callout" *ngIf="selectedCategory === 'WATCHLIST' && watchlist.length === 0 && !isLoading">
-        <div class="empty-icon"><i class="bi bi-bookmark"></i></div>
-        <h4>Your watchlist is empty</h4>
-        <p>Save movies to watch later by clicking the bookmark button on any movie.</p>
-        <a routerLink="/movies" class="discover-btn">Browse Movies</a>
-      </div>
-
 
       <!-- SECTION 4: MOVIE COMMUNITY & DISCUSSIONS -->
-      <section class="shelf-section" *ngIf="selectedCategory === 'ALL' || selectedCategory === 'COMMUNITY'">
+      <section class="shelf-section">
         <div class="shelf-header">
           <h3>Movie Community</h3>
           <a routerLink="/matching" class="see-all-link">Explore <i class="bi bi-chevron-right"></i></a>
@@ -314,7 +304,7 @@
 
 
       <!-- SECTION 5: MY FAVORITES PLAYLIST -->
-      <section class="shelf-section" *ngIf="(selectedCategory === 'ALL' || selectedCategory === 'FAVORITES') && favorites.length > 0">
+      <section class="shelf-section" *ngIf="favorites.length > 0">
         <div class="shelf-header">
           <h3>My Playlist</h3>
           <a routerLink="/favorites" class="see-all-link">View all ({{ favorites.length }}) <i class="bi bi-chevron-right"></i></a>
@@ -327,7 +317,11 @@
             [routerLink]="['/movie-details', fav.movieId]">
             
             <div class="poster-thumb">
-              <img [src]="imageBase + fav.posterPath" [alt]="fav.title" loading="lazy" />
+              <img 
+                [src]="getPosterUrl(fav.posterPath)" 
+                [alt]="fav.title" 
+                loading="lazy"
+                (error)="$any($event.target).src = 'https://via.placeholder.com/300x450?text=No+Poster'" />
               <span class="favorite-heart-tag"><i class="bi bi-heart-fill"></i></span>
             </div>
 
@@ -335,14 +329,6 @@
           </div>
         </div>
       </section>
-
-      <!-- EMPTY FAVORITES CALLOUT (IF IN FAVORITES TAB & NONE SAVED) -->
-      <div class="empty-fav-callout" *ngIf="selectedCategory === 'FAVORITES' && favorites.length === 0 && !isLoading">
-        <div class="empty-icon"><i class="bi bi-heart"></i></div>
-        <h4>Your playlist is empty</h4>
-        <p>Save movies by clicking the heart button to easily access them anytime.</p>
-        <a routerLink="/movies" class="discover-btn">Discover Movies</a>
-      </div>
 
     </div>
 
@@ -366,6 +352,13 @@
         <i class="bi bi-play-circle-fill"></i>
       </div>
       <span>Movies</span>
+    </a>
+
+    <a routerLink="/watchlist" routerLinkActive="active" class="nav-tab" aria-label="Watchlist">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-bookmark-fill"></i>
+      </div>
+      <span>Watchlist</span>
     </a>
 
     <a routerLink="/favorites" routerLinkActive="active" class="nav-tab" aria-label="Favorites">

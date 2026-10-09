@@ -1,121 +1,189 @@
-<ion-content [fullscreen]="true" class="movies-page">
+<ion-content [fullscreen]="true" class="movies-content">
 
-  <div class="movies-container">
+  <div class="page-container">
 
-    <!-- HEADER -->
-    <header class="top-header">
+    <!-- ════════ PAGE HEADER ════════ -->
+    <header class="page-header">
 
-      <div class="logo">
-        <div class="logo-icon"><i class="bi bi-film"></i></div>
-        <span>Cine<span>Verse</span></span>
-      </div>
-
-      <button class="back-button" routerLink="/home">
+      <a routerLink="/home" class="back-btn" aria-label="Back to Home">
         <i class="bi bi-arrow-left"></i>
-      </button>
+      </a>
+
+      <div class="header-titles">
+        <span class="eyebrow">CINEVERSE EXPLORE</span>
+        <h1>Movie Catalog</h1>
+        <p class="subtitle">Discover shared movies, community additions, and trending cinema</p>
+      </div>
 
     </header>
 
+    <!-- ════════ HERO BANNER ════════ -->
+    <section class="hero-banner" *ngIf="!isLoading && !errorMessage">
 
-    <!-- HERO -->
-    <section class="hero-section">
+      <div class="hero-content">
+        <div class="hero-pill">
+          <i class="bi bi-film"></i>
+          <span>Cinema Universe</span>
+        </div>
 
-      <p class="eyebrow">CINEVERSE MOVIES</p>
-
-      <h1>
-        Discover
-        <span>great movies.</span>
-      </h1>
-
-      <p class="description">
-        Explore popular movies and discover your next favorite.
-      </p>
+        <h2>Curated Movie Collection</h2>
+        <p>
+          Browse top-rated cinema and movies added directly to the database. Click on any title to view details, rate, or add it to your watchlist.
+        </p>
+      </div>
 
     </section>
 
+    <!-- ════════ SEARCH & FILTER TOOLBAR ════════ -->
+    <div class="search-toolbar">
 
-    <!-- SEARCH -->
-    <div class="search-box">
-
-      <i class="bi bi-search"></i>
-
-      <input type="text" placeholder="Search movies..." [(ngModel)]="searchTerm" (input)="searchMovies()" />
+      <div class="search-box">
+        <i class="bi bi-search search-icon"></i>
+        <input
+          type="text"
+          placeholder="Search movies by title or plot..."
+          [(ngModel)]="searchTerm"
+          (input)="searchMovies()"
+          class="search-input" />
+        <button *ngIf="searchTerm" (click)="searchTerm = ''; searchMovies()" class="clear-btn" aria-label="Clear search">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
 
     </div>
 
+    <!-- ════════ STATE 1: LOADING ════════ -->
+    <div class="state-card loading-state" *ngIf="isLoading">
+      <div class="spinner-glow"></div>
+      <h2>Loading movie catalog...</h2>
+      <p>Synchronizing Firestore movies and trending catalog</p>
+    </div>
 
-    <!-- MOVIES -->
-    <section class="movies-section">
-
-      <div class="section-header">
-
-        <h2>Popular Movies</h2>
-
-        <span>TMDB</span>
-
+    <!-- ════════ STATE 2: ERROR ════════ -->
+    <div class="state-card error-state" *ngIf="!isLoading && errorMessage">
+      <div class="state-icon-wrap error-icon">
+        <i class="bi bi-exclamation-triangle-fill"></i>
       </div>
+      <h2>Unable to load catalog</h2>
+      <p>{{ errorMessage }}</p>
+      <button class="action-btn primary-btn" (click)="loadMovies()">
+        <i class="bi bi-arrow-clockwise"></i>
+        <span>Try Again</span>
+      </button>
+    </div>
 
-
-      <!-- LOADING -->
-      <div class="loading-container" *ngIf="isLoading">
-
-        <div class="spinner"></div>
-
-        <p>Loading movies...</p>
-
+    <!-- ════════ STATE 3: EMPTY ════════ -->
+    <div class="state-card empty-state" *ngIf="!isLoading && !errorMessage && movies.length === 0">
+      <div class="state-icon-wrap">
+        <i class="bi bi-search"></i>
       </div>
+      <h2>No movies found</h2>
+      <p>No results match "{{ searchTerm }}". Try a different search term.</p>
+      <button class="action-btn primary-btn" (click)="searchTerm = ''; searchMovies()">
+        <i class="bi bi-arrow-counterclockwise"></i>
+        <span>Clear Search</span>
+      </button>
+    </div>
 
+    <!-- ════════ MOVIE GRID ════════ -->
+    <div class="movie-grid" *ngIf="!isLoading && !errorMessage && movies.length > 0">
 
-      <!-- ERROR -->
-      <div class="error-message" *ngIf="!isLoading && errorMessage">
+      <div class="movie-card" *ngFor="let movie of movies" [routerLink]="['/movie-details', movie.id]">
 
-        <p>{{ errorMessage }}</p>
+        <!-- Poster Box -->
+        <div class="poster-container">
+          <img
+            [src]="getPosterUrl(movie)"
+            [alt]="movie.title"
+            loading="lazy"
+            (error)="$any($event.target).src = 'https://via.placeholder.com/300x450?text=No+Poster'" />
 
-        <button (click)="loadMovies()">
-          Try Again
-        </button>
-
-      </div>
-
-
-      <!-- MOVIE GRID -->
-      <div class="movie-grid" *ngIf="!isLoading && movies.length > 0">
-
-        <div class="movie-card" *ngFor="let movie of movies" [routerLink]="['/movie-details', movie.id]">
-
-          <!-- POSTER -->
-          <div class="poster-container">
-
-            <img [src]="imageBase + movie.poster_path" [alt]="movie.title" />
-
-            <!-- RATING -->
-            <div class="rating">
-              <i class="bi bi-star-fill"></i>
-              {{ movie.vote_average | number:'1.1-1' }}
-            </div>
-
+          <!-- Rating Badge -->
+          <div class="rating-badge" *ngIf="movie.vote_average">
+            <i class="bi bi-star-fill"></i>
+            <span>{{ movie.vote_average | number:'1.1-1' }}</span>
           </div>
 
+          <!-- Custom Pill Badge -->
+          <div class="custom-badge" *ngIf="movie.isCustom">
+            <i class="bi bi-check2-circle"></i>
+            <span>Catalog</span>
+          </div>
+        </div>
 
-          <!-- MOVIE INFO -->
-          <div class="movie-info">
+        <!-- Movie Info -->
+        <div class="movie-info">
+          <h3 class="movie-title" [title]="movie.title">{{ movie.title }}</h3>
 
-            <h3>
-              {{ movie.title }}
-            </h3>
-
-            <p>
+          <div class="movie-meta-row">
+            <span class="release-year" *ngIf="movie.release_date">
+              <i class="bi bi-calendar3"></i>
               {{ movie.release_date | date:'yyyy' }}
-            </p>
-
+            </span>
+            <span class="genre-preview" *ngIf="movie.genres?.length">
+              {{ movie.genres[0] }}
+            </span>
           </div>
 
+          <p class="movie-synopsis" *ngIf="movie.overview">
+            {{ movie.overview }}
+          </p>
+
+          <div class="card-footer-cta">
+            <span>View Details</span>
+            <i class="bi bi-arrow-right"></i>
+          </div>
         </div>
 
       </div>
 
-    </section>
+    </div>
 
   </div>
+
+  <!-- ════════ SLEEK BOTTOM NAVIGATION BAR ════════ -->
+  <nav class="mobile-bottom-nav">
+    <a routerLink="/home" class="nav-tab" aria-label="Home">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-house-door-fill"></i>
+      </div>
+      <span>Home</span>
+    </a>
+
+    <a routerLink="/movies" class="nav-tab active" aria-label="Movies">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-play-circle-fill"></i>
+      </div>
+      <span>Movies</span>
+    </a>
+
+    <a routerLink="/watchlist" class="nav-tab" aria-label="Watchlist">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-bookmark-fill"></i>
+      </div>
+      <span>Watchlist</span>
+    </a>
+
+    <a routerLink="/favorites" class="nav-tab" aria-label="Favorites">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-heart-fill"></i>
+      </div>
+      <span>Favorites</span>
+    </a>
+
+    <a routerLink="/matching" class="nav-tab" aria-label="Community">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <span>Community</span>
+    </a>
+
+    <a routerLink="/profile" class="nav-tab" aria-label="Profile">
+      <div class="tab-icon-wrap">
+        <i class="bi bi-person-fill"></i>
+      </div>
+      <span>Profile</span>
+    </a>
+  </nav>
 
 </ion-content>

@@ -60,6 +60,11 @@ body, html {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Ensure bottom nav clicks immediately register on the parent <a> tag */
+.mobile-bottom-nav .nav-tab * {
+  pointer-events: none;
+}
+
 h1, h2, h3, h4, .brand-title {
   font-family: 'Outfit', sans-serif;
 }
